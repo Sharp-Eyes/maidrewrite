@@ -10,5 +10,5 @@ per-file-ignores =
 accept-encodings = utf-8
 docstring-convention = numpy
 
-exclude = 
+exclude =
     env

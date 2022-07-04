@@ -11,3 +11,35 @@ line-length = 100
 [tool.isort]
 profile = "black"
 skip_gitignore = true
+
+[tool.poetry]
+name = "Maid-in-Abyss"
+version = "0.1.0"
+description = ""
+authors = ["Chromosomologist <you@example.com>"]  # email pending :mmlol:
+
+[tool.poetry.dependencies]
+python = "^3.10"
+disnake = {git = "https://github.com/DisnakeDev/disnake", rev = "master"}
+disnake-ext-components = {git = "https://github.com/DisnakeCommunity/disnake-ext-components"}
+ormar = "^0.11.2"
+psycopg2-binary = "^2.9.3"
+redis = "^4.3.4"
+ormar-postgres-extensions = "^2.1.0"
+coloredlogs = "^15.0.1"
+genshin = "^1.2.1"
+wikitextparser = "^0.49.2"
+python-dotenv = "0.20.0"
+fakeredis = "^1.8.1"
+
+
+[tool.poetry.dev-dependencies]
+black = "^22.6.0"
+isort = "^5.10.1"
+flake8 = "^4.0.1"
+flake8-bugbear = "^22.7.1"
+pre-commit = "^2.19.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
