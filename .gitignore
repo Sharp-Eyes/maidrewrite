@@ -1,0 +1,7 @@
+.mypy_cache
+.vscode
+.env
+env
+logs
+*.ipynb
+\__pycache__*

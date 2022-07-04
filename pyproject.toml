@@ -1,0 +1,6 @@
+[tool.pyright]
+include = ["maid_in_abyss"]
+typeCheckingMode = "strict"
+reportUnknownMemberType = false  # literally impossible to use dpy otherwise
+reportPrivateUsage = false  # Needed occasionally to overwrite existing behaviour
+reportMissingTypeStubs = false  # /shrug
