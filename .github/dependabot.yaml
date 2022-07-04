@@ -3,6 +3,13 @@
 version: 2
 updates:
 
+  - package-ecosystem: "github-actions"
+    # Workflow files in .github/workflows will be checked
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
