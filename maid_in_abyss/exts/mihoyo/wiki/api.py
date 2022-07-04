@@ -81,7 +81,7 @@ class WikiRequest(t.AsyncIterator[T]):
             # lead to unexpected/unwanted errors are already logged.
             # Therefore, this can be safely ignored, and the next value can be returned.
             LOGGER.warning(
-                "Encountered {num} validation errors while parsing model {model.name}".format(
+                "Encountered {num} validation errors while parsing model {model.__name__}".format(
                     num=len(e.errors()),
                     model=self.model,
                 )

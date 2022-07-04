@@ -35,11 +35,11 @@ class NameValidatableEnum(enum.Enum):
 class BattlesuitRarityCategory(str, enum.Enum):
     """Battlesuit rarities as they appear on the wiki"""
 
-    R1 = B = "Category:B-rank_Battlesuits"
-    R2 = A = "Category:A-rank_Battlesuits"
-    R3 = S = "Category:S-rank_Battlesuits"
-    R4 = SS = "Category:SS-rank_Battlesuits"
-    R5 = SSS = "Category:SSS-rank_Battlesuits"
+    R1 = B = "Category:B-rank Battlesuits"
+    R2 = A = "Category:A-rank Battlesuits"
+    R3 = S = "Category:S-rank Battlesuits"
+    R4 = SS = "Category:SS-rank Battlesuits"
+    R5 = SSS = "Category:SSS-rank Battlesuits"
 
 
 class BattlesuitRarityEmoji(str, enum.Enum):
@@ -242,6 +242,13 @@ class StigmaSlot(str, enum.Enum):
 # Weapons
 
 
+class WeaponSkillTypeEmoji(str, enum.Enum):
+    """Emoji representing the type of weapon skill"""
+
+    PASSIVE = "<:Passive:914596917961445416>"
+    ACTIVE = "<:Active:914594001565413378>"
+
+
 class WeaponRarityCategory(str, enum.Enum):
     """Weapon rarity categories as they appear on the wiki."""
 
@@ -250,7 +257,7 @@ class WeaponRarityCategory(str, enum.Enum):
     R3 = "Category:3-Star Weapons"
     R4 = "Category:4-Star Weapons"
     R5 = "Category:5-Star Weapons"
-    R6 = "Category:6-star Weapons"
+    R6 = "Category:6-Star Weapons"
 
 
 class WeaponRarity(int, enum.Enum):
@@ -306,16 +313,3 @@ class WeaponType(str, enum.Enum):
     def category(self) -> WeaponCategory:
         """The wiki category belonging to this weapon type."""
         return WeaponCategory[self.name]
-
-
-# Display
-
-
-class Emoji(str, enum.Enum):
-    """Emoji used in visualisation of HI3 Wiki-related content.
-
-    When used in pydantic models, unlike normal Enums, validation is done by name.
-    """
-
-    PASSIVE = "<:Passive:914596917961445416>"
-    ACTIVE = "<:Active:914594001565413378>"

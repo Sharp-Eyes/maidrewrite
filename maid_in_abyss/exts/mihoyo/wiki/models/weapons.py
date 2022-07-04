@@ -5,15 +5,18 @@ import pydantic
 
 from .. import api_types, constants
 
-__all__ = ("Weapon", "WeaponSkill", "WeaponStat")
+__all__ = ("Weapon", "WeaponSkill")
 
 
 ACTIVE_SKILL_PATTERN = re.compile(r"\[SP: \d+\]\[CD: \d+s\]")
 
 
-class WeaponStat(api_types.ContentBase):
-    base: int
-    max: int
+# class WeaponStat(api_types.ContentBase):
+#     base: int
+#     max: int
+
+#     def display(self) -> str:
+#         return f"{self.base} ~ {self.max}"
 
 
 class WeaponSkill(api_types.ContentBase):
@@ -25,16 +28,17 @@ class WeaponSkill(api_types.ContentBase):
 
 
 class Weapon(api_types.ContentBase):
+    name: str
+    type: t.Union[constants.WeaponType, str]
     rarity: constants.WeaponRarity
-    type: constants.WeaponType
-    upgradable: bool
-    obtain: t.Mapping[str, bool]
-    attack: WeaponStat = pydantic.Field(alias="ATK")
-    crit: WeaponStat = pydantic.Field(alias="CRT")
+    # obtain: t.Optional[str] = None
+    attack: int = pydantic.Field(alias="ATK")
+    crit: int = pydantic.Field(alias="CRT")
 
-    pri_arm_base: str = pydantic.Field(alias="priArmBase")
     description: str
     skills: t.Sequence[WeaponSkill]
+    pri_arm_base: t.Optional[str] = pydantic.Field(None, alias="priArmBase")
+    divine_key: bool = False
 
     @pydantic.root_validator(pre=True)
     def _pack_obtain(cls, values: t.Dict[str, t.Any]):
@@ -42,23 +46,23 @@ class Weapon(api_types.ContentBase):
         values[base] = {k.removeprefix(base): v for k, v in values.items() if base in k}
         return values
 
-    @pydantic.root_validator(pre=True)
-    def _pack_stats(cls, values: t.Dict[str, t.Any]):
-        for base in ("ATK", "CRT"):
-            values[base] = {tier: values[f"{base}_{tier}Rarity"] for tier in ("base", "max")}
-        return values
+    # @pydantic.root_validator(pre=True)
+    # def _pack_stats(cls, values: t.Dict[str, t.Any]):
+    #     for base in ("ATK", "CRT"):
+    #         values[base] = {tier: values[f"{base}_{tier}Rarity"] for tier in ("base", "max")}
+    #     return values
 
     @pydantic.root_validator(pre=True)
     def _pack_skills(cls, values: t.Dict[str, t.Any]):
         values["skills"] = skills = []
-        for i in range(1, 4):
-            if not (name := values.get(f"s{i}_name")):
+        for i in range(1, 5):
+            if not (name := values.get(f"skill{i}")):
                 break
 
             skills.append(
                 WeaponSkill(
                     name=name,
-                    effect=values[f"s{i}_effect"],
+                    effect=values[f"effect{i}"],
                 )
             )
         return values

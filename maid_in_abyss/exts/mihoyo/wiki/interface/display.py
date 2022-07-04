@@ -6,7 +6,7 @@ import wikitextparser
 
 from .. import api, constants, models
 
-# STRING PARSERS
+# String parsers
 
 
 def urlify(s: str):
@@ -34,17 +34,17 @@ def discord_link(display: str, link: t.Optional[str] = None, from_display: bool 
 
 
 TAG_MAPPING = {
-    "inc": "**",
-    "increase": "**",
-    "color-blue": "**",
-    "color-orange": "**",
+    "inc": ("**", "**"),
+    "increase": ("**", "**"),
+    "color-blue": ("**", "**"),
+    "inco": ("```ansi\n\u001b[1;33m", "\u001b[0m```"),
     "br": "\n",
 }
 
 TEMPLATE_MAPPING = {"star": "\N{BLACK STAR}"}
 
 
-def parse_wiki_str(string: str) -> str:
+def parse_wiki_str(string: str) -> str:  # TODO: possibly refactor
     """Parse a string with MediaWiki markup and HTML tags to Markdown recognized by discord."""
 
     repl: t.Optional[str]
@@ -71,11 +71,13 @@ def parse_wiki_str(string: str) -> str:
         match_l, match_h = t.cast(t.Match[str], tag._match).span("contents")
 
         if match_l != -1:  # not a self-closing tag
-            repl = TAG_MAPPING.get(tag.attrs["class"])
-            replace(list_str, span_l, span_l + match_l, repl)
-            replace(list_str, span_l + match_h, span_h, repl)
+            repl_l, repl_r = TAG_MAPPING.get(tag.attrs["class"], (None, None))
+            replace(list_str, span_l, span_l + match_l, repl_l)
+            replace(list_str, span_l + match_h, span_h, repl_r)
         else:  # remove the whole self-closing tag
-            replace(list_str, span_l, span_h, TAG_MAPPING.get(tag.name))
+            repl_single = TAG_MAPPING.get(tag.name, None)
+            assert isinstance(repl_single, str)
+            replace(list_str, span_l, span_h, repl_single)
 
     for wikilink in wt.wikilinks:
         span_l, span_h = t.cast(t.Tuple[int, int], wikilink.span)
@@ -104,10 +106,10 @@ def parse_wiki_str(string: str) -> str:
     return "".join(c for c in list_str if c is not None)
 
 
-# - BATTLESUITS
+# Battlesuits
 
 
-def battlesuit_description(battlesuit: models.Battlesuit) -> str:
+def make_battlesuit_description(battlesuit: models.Battlesuit) -> str:
     """Used as fallback for battlesuits without a description. Appears to be the case for augments."""
     return f"{discord_link(battlesuit.character)} battlesuit." + (
         f"\n{discord_link('Augment Core')} upgrade of {discord_link(battlesuit.augment)}"
@@ -116,11 +118,11 @@ def battlesuit_description(battlesuit: models.Battlesuit) -> str:
     )
 
 
-def battlesuit_header_embed(battlesuit: models.Battlesuit) -> disnake.Embed:
+def make_battlesuit_header_embed(battlesuit: models.Battlesuit) -> disnake.Embed:
     desc = (
         parse_wiki_str(battlesuit.profile)
         if battlesuit.profile
-        else battlesuit_description(battlesuit)
+        else make_battlesuit_description(battlesuit)
     )
     return (
         disnake.Embed(
@@ -137,7 +139,7 @@ def battlesuit_header_embed(battlesuit: models.Battlesuit) -> disnake.Embed:
     )
 
 
-def battlesuit_info_embed(battlesuit: models.Battlesuit) -> disnake.Embed:
+def make_battlesuit_info_embed(battlesuit: models.Battlesuit) -> disnake.Embed:
     info_embed = disnake.Embed(color=battlesuit.type.colour).add_field(
         name="About:",
         value=(
@@ -166,11 +168,11 @@ def battlesuit_info_embed(battlesuit: models.Battlesuit) -> disnake.Embed:
     return info_embed
 
 
-def prettify_battlesuit(battlesuit: models.Battlesuit) -> list[disnake.Embed]:
-    return [battlesuit_header_embed(battlesuit), battlesuit_info_embed(battlesuit)]
+def prettify_battlesuit(battlesuit: models.Battlesuit) -> t.List[disnake.Embed]:
+    return [make_battlesuit_header_embed(battlesuit), make_battlesuit_info_embed(battlesuit)]
 
 
-# - STIGMATA
+# Stigmata
 
 
 def make_stigma_description(stigma: models.Stigma, show_rarity: bool = False):
@@ -219,7 +221,7 @@ def make_set_bonus_embed(
     return set_embed
 
 
-def prettify_stigmata(stigmata_set: models.StigmataSet) -> list[disnake.Embed]:
+def prettify_stigmata(stigmata_set: models.StigmataSet) -> t.List[disnake.Embed]:
     """Generate display embeds for a `StigmataSet`."""
     set_stigmata, set_bonuses = stigmata_set.get_main_set_with_bonuses()
 
@@ -229,3 +231,41 @@ def prettify_stigmata(stigmata_set: models.StigmataSet) -> list[disnake.Embed]:
         embeds.append(make_set_bonus_embed(set_bonuses, set_stigmata[0].rarity.emoji))
 
     return embeds
+
+
+# Weapons
+
+
+def make_weapon_header_embed(weapon: models.Weapon) -> disnake.Embed:
+    return (
+        disnake.Embed(
+            description=(
+                f"Rarity: {weapon.rarity.emoji}\n\n"
+                + f"{parse_wiki_str(weapon.description)}\n\n"
+                + f"**ATK**: {weapon.attack}\t**CRT**: {weapon.crit}"
+            ),
+        )
+        .set_author(
+            name=weapon.name,
+            url=wiki_link(weapon.name),
+            icon_url=image_link(f"{weapon.type} (Type)"),
+        )
+        .set_thumbnail(image_link(f"{weapon.name} ({weapon.rarity}) (Icon)"))
+    )
+
+
+def make_weapon_info_embed(weapon: models.Weapon) -> disnake.Embed:
+    info_embed = disnake.Embed()
+    for skill in weapon.skills:
+        icon = (
+            constants.WeaponSkillTypeEmoji.ACTIVE
+            if skill.is_active()
+            else constants.WeaponSkillTypeEmoji.PASSIVE
+        )
+
+        info_embed.add_field(name=f"{icon} {skill.name}", value=parse_wiki_str(skill.effect))
+    return info_embed
+
+
+def prettify_weapon(weapon: models.Weapon) -> t.List[disnake.Embed]:
+    return [make_weapon_header_embed(weapon), make_weapon_info_embed(weapon)]

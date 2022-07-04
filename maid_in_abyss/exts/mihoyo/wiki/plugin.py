@@ -143,7 +143,12 @@ async def readcache(inter: disnake.CommandInteraction, query: str):
             stigmata = models.StigmataSet.parse_obj(revision_data)
             embeds = interface.display.prettify_stigmata(stigmata)
 
+        elif {"ATK", "CRT"}.issubset(revision_data):
+            weapon = models.Weapon.parse_obj(revision_data)
+            embeds = interface.display.prettify_weapon(weapon)
+
         else:
+            print(list(revision_data.keys()))
             await inter.send(str(revision_data)[:2000])
             return
 
