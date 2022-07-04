@@ -1,16 +1,15 @@
 import asyncio
+import logging
 import time
 import typing as t
+
 import aiohttp
-import logging
-
-import disnake
-
 import bot
+import disnake
 import utilities
 from database.models import hoyo_wiki
 
-from . import api, api_types, constants, models, interface
+from . import api, api_types, constants, interface, models
 
 __all__ = ("setup", "teardown", "plugin")
 
@@ -19,7 +18,7 @@ LOGGER = logging.Logger(__name__)
 plugin = utilities.Plugin.with_metadata(
     name="hi3_wiki",
     category="Wiki",
-    slash_command_attrs={"guild_ids": [701039771157397526]}
+    slash_command_attrs={"guild_ids": [701039771157397526]},
 )
 
 
@@ -36,9 +35,7 @@ async def _fetch_unique_pages(
 ) -> t.AsyncGenerator[t.Dict[str, t.Any], t.Any]:
     titles: t.Set[t.Dict[str, t.Any]] = set()
     async for page in api.WikiRequest(
-        session,
-        model=api_types.PageInfoValidator,
-        params=request_base_params | request_params
+        session, model=api_types.PageInfoValidator, params=request_base_params | request_params
     ):
         for alias_data in page.unpack_aliases(base_params=model_base_params or {}):
             if (title := alias_data["title"]) in titles:
@@ -56,15 +53,17 @@ async def _fetch_and_store_pages(
     model_base_params: t.Optional[t.Dict[str, t.Any]] = None,
     **request_params: t.Any,
 ):
-    await method([
-        hoyo_wiki.PageInfo.construct(**page_data)
-        async for page_data in _fetch_unique_pages(
-            session,
-            request_base_params=request_base_params,
-            model_base_params=model_base_params,
-            **request_params,
-        )
-    ])
+    await method(
+        [
+            hoyo_wiki.PageInfo.construct(**page_data)
+            async for page_data in _fetch_unique_pages(
+                session,
+                request_base_params=request_base_params,
+                model_base_params=model_base_params,
+                **request_params,
+            )
+        ]
+    )
 
 
 @plugin.slash_command()
@@ -74,17 +73,17 @@ async def cache(inter: disnake.CommandInteraction, clear: bool = False):
     await inter.response.defer()
 
     base_params: t.Dict[str, t.Any] = {
-		"action": "query",
-		"format": "json",
-		"prop": "categories|redirects",
-		"generator": "categorymembers",
-		"utf8": 1,
-		"cllimit": "max",
-		"clcategories": ...,
-		"rdprop": "title",
-		"rdlimit": "max",
-		"gcmtitle": ...,
-		"gcmlimit": "max",
+        "action": "query",
+        "format": "json",
+        "prop": "categories|redirects",
+        "generator": "categorymembers",
+        "utf8": 1,
+        "cllimit": "max",
+        "clcategories": ...,
+        "rdprop": "title",
+        "rdlimit": "max",
+        "gcmtitle": ...,
+        "gcmlimit": "max",
     }
 
     if clear:
@@ -94,22 +93,24 @@ async def cache(inter: disnake.CommandInteraction, clear: bool = False):
         method = hoyo_wiki.PageInfo.objects.bulk_update
 
     categories = (
-        (constants.RequestCategory.STIGMATA,    constants.StigmaRarityCategory),
+        (constants.RequestCategory.STIGMATA, constants.StigmaRarityCategory),
         (constants.RequestCategory.BATTLESUITS, constants.BattlesuitRarityCategory),
-        (constants.RequestCategory.WEAPONS,     constants.WeaponRarityCategory),
+        (constants.RequestCategory.WEAPONS, constants.WeaponRarityCategory),
     )
 
-    await asyncio.gather(*[
-        _fetch_and_store_pages(
-            method,
-            inter.bot.default_session,
-            request_base_params=base_params,
-            model_base_params={"category": request_category},
-            clcategories="|".join(sub_categories),
-            gcmtitle=request_category.value,
-        )
-        for request_category, sub_categories in categories
-    ])
+    await asyncio.gather(
+        *[
+            _fetch_and_store_pages(
+                method,
+                inter.bot.default_session,
+                request_base_params=base_params,
+                model_base_params={"category": request_category},
+                clcategories="|".join(sub_categories),
+                gcmtitle=request_category.value,
+            )
+            for request_category, sub_categories in categories
+        ]
+    )
 
     await inter.edit_original_message("Successfully fetched and stored data.")
 
@@ -133,11 +134,11 @@ async def readcache(inter: disnake.CommandInteraction, query: str):
         params=page_params,
     ):
         revision_data = api.wikitext_to_dict(page.revision.content)
-        
+
         if "battlesuit" in revision_data:
             battlesuit = models.Battlesuit.parse_obj(revision_data)
             embeds = interface.display.prettify_battlesuit(battlesuit)
-        
+
         elif {"slotT", "slotM", "slotB"}.intersection(revision_data):
             stigmata = models.StigmataSet.parse_obj(revision_data)
             embeds = interface.display.prettify_stigmata(stigmata)
@@ -151,7 +152,11 @@ async def readcache(inter: disnake.CommandInteraction, query: str):
 
 
 def make_autocomp_title(record: t.Any):
-    return title if (title := record.title) == (orig := record.alias_of) else f"{orig} \u300C{title}\u300D"
+    return (
+        title
+        if (title := record.title) == (orig := record.alias_of)
+        else f"{orig} \u300C{title}\u300D"
+    )
 
 
 @readcache.autocomplete("query")
@@ -184,10 +189,7 @@ async def wiki_search_autocomp(inter: disnake.CommandInteraction, query: str):
     LOGGER.info(f"Completed autocomplete query in {tdiff:.3f}ms.")
     print(f"Completed autocomplete query in {tdiff*1000:.3f}ms.")
 
-    return {
-        make_autocomp_title(record): str(record.pageid)
-        for record in records
-    }
+    return {make_autocomp_title(record): str(record.pageid) for record in records}
 
 
 setup, teardown = plugin.create_extension_handlers()

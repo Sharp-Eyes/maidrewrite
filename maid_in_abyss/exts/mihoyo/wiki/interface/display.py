@@ -1,7 +1,7 @@
-import disnake
-
 import typing as t
 import urllib.parse
+
+import disnake
 import wikitextparser
 
 from .. import api, constants, models
@@ -50,10 +50,7 @@ def parse_wiki_str(string: str) -> str:
     repl: t.Optional[str]
 
     def replace(
-        lst: list[t.Optional[str]],
-        begin: int,
-        end: int,
-        repl: t.Optional[str] = None
+        lst: list[t.Optional[str]], begin: int, end: int, repl: t.Optional[str] = None
     ) -> None:
         lst[begin:end] = [repl] + t.cast(t.List[t.Optional[str]], [None] * (end - begin - 1))
 
@@ -148,7 +145,7 @@ def battlesuit_info_embed(battlesuit: models.Battlesuit) -> disnake.Embed:
             + f"\nType: {battlesuit.type.emoji} {battlesuit.type.name}"
             + f"\nValkyrie: {constants.RequestCategoryEmoji.VALKYRIE} {discord_link(battlesuit.character)}"
             + (
-                f"\nAugment (of): {constants.RequestCategoryEmoji.VALKYRIE} {discord_link(battlesuit.augment)}"
+                f"\nAugment (of): {constants.RequestCategoryEmoji.VALKYRIE} {discord_link(battlesuit.augment)}"  # noqa: E501
                 if battlesuit.augment
                 else ""
             )
@@ -210,7 +207,9 @@ def make_stigma_embed(stigma: models.Stigma, show_rarity: bool) -> disnake.Embed
     )
 
 
-def make_set_bonus_embed(set_bonuses: t.Sequence[models.SetBonus], set_rarity: str) -> disnake.Embed:
+def make_set_bonus_embed(
+    set_bonuses: t.Sequence[models.SetBonus], set_rarity: str
+) -> disnake.Embed:
     """Generate a display embed for a `StigmataSet`'s set bonuses."""
     set_embed = disnake.Embed(description=f"Rarity: {set_rarity}")
     for set_bonus in set_bonuses:

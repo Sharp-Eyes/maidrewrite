@@ -45,10 +45,7 @@ class Weapon(api_types.ContentBase):
     @pydantic.root_validator(pre=True)
     def _pack_stats(cls, values: t.Dict[str, t.Any]):
         for base in ("ATK", "CRT"):
-            values[base] = {
-                tier: values[f"{base}_{tier}Rarity"]
-                for tier in ("base", "max")
-            }
+            values[base] = {tier: values[f"{base}_{tier}Rarity"] for tier in ("base", "max")}
         return values
 
     @pydantic.root_validator(pre=True)
@@ -58,10 +55,12 @@ class Weapon(api_types.ContentBase):
             if not (name := values.get(f"s{i}_name")):
                 break
 
-            skills.append(WeaponSkill(
-                name=name,
-                effect=values[f"s{i}_effect"],
-            ))
+            skills.append(
+                WeaponSkill(
+                    name=name,
+                    effect=values[f"s{i}_effect"],
+                )
+            )
         return values
 
     @pydantic.validator("rarity", pre=True)

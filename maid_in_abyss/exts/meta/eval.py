@@ -6,23 +6,24 @@ import io
 import logging
 import re
 import traceback
-import aiohttp
 import typing as t
 
+import aiohttp
+import bot
 import databases
 import disnake
-from disnake.ext import commands
-
-import bot
 import utilities
+from disnake.ext import commands
 
 LOGGER = logging.getLogger(__name__)
 
 
 _T_contra = t.TypeVar("_T_contra", contravariant=True)
 
+
 class SupportsWrite(t.Protocol[_T_contra]):
-    def write(self, __s: _T_contra) -> object: ...
+    def write(self, __s: _T_contra) -> object:
+        ...
 
 
 class AllowedLang(str, enum.Enum):
@@ -31,8 +32,8 @@ class AllowedLang(str, enum.Enum):
 
 
 CODEBLOCK_PATTERN = re.compile(
-    fr"```(?P<lang>{'|'.join(AllowedLang)})\s*\n(?P<code>.*?)\n?```",
-    flags=re.DOTALL | re.MULTILINE
+    rf"```(?P<lang>{'|'.join(AllowedLang)})\s*\n(?P<code>.*?)\n?```",
+    flags=re.DOTALL | re.MULTILINE,
 )
 SELECT_QUERY_PATTERN = re.compile(r"\s*SELECT", flags=re.IGNORECASE)
 
@@ -48,7 +49,7 @@ def _make_print_proxy(file_proxy: SupportsWrite[str]):
         *values: object,
         sep: t.Optional[str] = ...,
         end: t.Optional[str] = ...,
-        file: t.Optional[SupportsWrite[str]] = ...
+        file: t.Optional[SupportsWrite[str]] = ...,
     ):
         print(
             *values,
@@ -56,6 +57,7 @@ def _make_print_proxy(file_proxy: SupportsWrite[str]):
             end="\n" if end is Ellipsis else end,
             file=file_proxy if file is Ellipsis else file,
         )
+
     return _proxied_print
 
 
@@ -82,7 +84,7 @@ async def _evaluate_postgres(query: str, database: databases.Database) -> str:
                 repr(record._mapping)  # pyright: ignore[reportUnknownArgumentType]
                 for record in await database.fetch_all(query)
             )
-        
+
         return str(await database.execute(query))
 
     except Exception:
@@ -110,6 +112,7 @@ def _create_namespace(ctx: commands.Context[bot.Maid_in_Abyss]) -> t.Dict[str, t
     }
 
 
+@commands.is_owner()
 @plugin.command("eval")
 async def evaluate(ctx: commands.Context[bot.Maid_in_Abyss], *, input_: str):
     match = CODEBLOCK_PATTERN.search(input_)
@@ -125,7 +128,7 @@ async def evaluate(ctx: commands.Context[bot.Maid_in_Abyss], *, input_: str):
             if lang is AllowedLang.PYTHON:
                 out = await _evaluate_py(code_attrs["code"], _create_namespace(ctx))
 
-            else: 
+            else:
                 out = await _evaluate_postgres(code_attrs["code"], ctx.bot.database)
 
     if not out:
