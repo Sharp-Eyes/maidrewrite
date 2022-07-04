@@ -684,7 +684,7 @@ python-versions = "*"
 
 [[package]]
 name = "wikitextparser"
-version = "0.49.2"
+version = "0.49.3"
 description = "A simple parsing tool for MediaWiki's wikitext markup."
 category = "main"
 optional = false
@@ -721,7 +721,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "644d1830c3acfdb3d556f4094c8df836ba4be2e117843b0a47382d774f5ef2c0"
+content-hash = "430babff0e1acc25f303bd2962c605e62f67d0e2702c1a15dab219782768a1b4"
 
 [metadata.files]
 aiohttp = [
@@ -1444,8 +1444,8 @@ wcwidth = [
     {file = "wcwidth-0.2.5.tar.gz", hash = "sha256:c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83"},
 ]
 wikitextparser = [
-    {file = "wikitextparser-0.49.2-py3-none-any.whl", hash = "sha256:1e2d420e226d6e7d334efefc532d722c25b9f16c06c9f1f923a3667cc3aa889d"},
-    {file = "wikitextparser-0.49.2.tar.gz", hash = "sha256:7a456d4c4b81499cb5edb9a7e0467955ddf4773434a6b3eeeab08d4a3a91ea31"},
+    {file = "wikitextparser-0.49.3-py3-none-any.whl", hash = "sha256:489a20e4690350a66cdcad124f5392f8bbf743c8141665febae2a55a56b49fb6"},
+    {file = "wikitextparser-0.49.3.tar.gz", hash = "sha256:a8dc65426cab4184ddf4ec45776cf4092a9a15ace481f2d563993bf2c5d63cb9"},
 ]
 wrapt = [
     {file = "wrapt-1.14.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:1b376b3f4896e7930f1f772ac4b064ac12598d1c38d04907e696cc4d794b43d3"},
