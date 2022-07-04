@@ -1,14 +1,13 @@
 from __future__ import annotations
-import asyncio
 
+import asyncio
 import dataclasses
 import inspect
+import logging
 import typing as t
 
 import disnake
 from disnake.ext import commands
-
-import logging
 
 __all__ = ("Plugin",)
 
@@ -19,6 +18,7 @@ T = t.TypeVar("T")
 P = t.ParamSpec("P")
 Coro = t.Coroutine[t.Any, t.Any, T]
 EmptyAsync = t.Callable[[], Coro[None]]
+SetupFunc = t.Callable[[commands.Bot], None]
 
 AnyCommand = commands.Command[t.Any, t.Any, t.Any]
 
@@ -61,7 +61,7 @@ class SlashCommandParams(AppCommandParams, total=False):
 class PluginMetadata:
     name: str
     category: t.Optional[str] = None
-    
+
     command_attrs: CommandParams = dataclasses.field(default_factory=CommandParams)
     slash_command_attrs: SlashCommandParams = dataclasses.field(default_factory=SlashCommandParams)
     message_command_attrs: AppCommandParams = dataclasses.field(default_factory=AppCommandParams)
@@ -77,8 +77,9 @@ def _get_source_module_name() -> str:
                 return name
 
     except (AttributeError, KeyError):
+        # It's safe to ignore the pyright errors above precisely because we're catching these errors here.
         pass
-    
+
     raise TypeError("Failed to infer a name for this plugin. Please provide one manually.")
 
 
@@ -115,26 +116,27 @@ class Plugin:
 
         # self.dependencies = PluginDependencyManager()
 
-
     @classmethod
     def with_metadata(
         cls,
         *,
         name: t.Optional[str] = None,
         category: t.Optional[str] = None,
-        command_attrs: CommandParams = CommandParams(),
-        slash_command_attrs: SlashCommandParams = SlashCommandParams(),
-        message_command_attrs: AppCommandParams = AppCommandParams(),
-        user_command_attrs: AppCommandParams = AppCommandParams(),
+        command_attrs: t.Optional[CommandParams] = None,
+        slash_command_attrs: t.Optional[SlashCommandParams] = None,
+        message_command_attrs: t.Optional[AppCommandParams] = None,
+        user_command_attrs: t.Optional[AppCommandParams] = None,
     ) -> Plugin:
-        return cls(PluginMetadata(
-            name=name or _get_source_module_name(),
-            category=category,
-            command_attrs=command_attrs,
-            slash_command_attrs=slash_command_attrs,
-            message_command_attrs=message_command_attrs,
-            user_command_attrs=user_command_attrs, 
-        ))
+        return cls(
+            PluginMetadata(
+                name=name or _get_source_module_name(),
+                category=category,
+                command_attrs=command_attrs or CommandParams(),
+                slash_command_attrs=slash_command_attrs or SlashCommandParams(),
+                message_command_attrs=message_command_attrs or AppCommandParams(),
+                user_command_attrs=user_command_attrs or AppCommandParams(),
+            )
+        )
 
     @property
     def name(self) -> str:
@@ -172,6 +174,7 @@ class Plugin:
             self.commands[command.qualified_name] = command
 
             return command
+
         return decorator
 
     def slash_command(
@@ -201,22 +204,21 @@ class Plugin:
         def decorator(callback: t.Callable[..., Coro[t.Any]]) -> commands.InvokableSlashCommand:
             if not asyncio.iscoroutinefunction(callback):
                 raise TypeError(f"<{callback.__qualname__}> must be a coroutine function")
-            
+
             command = commands.InvokableSlashCommand(callback, **attributes)
             self.slash_commands[command.qualified_name] = command
 
             return command
+
         return decorator
 
     def listener(self, event: t.Optional[str] = None):
-
         def decorator(callback: t.Callable[..., Coro[t.Any]]) -> t.Callable[..., Coro[t.Any]]:
             key = callback.__name__ if event is None else event
             self.listeners.setdefault(key, []).append(callback)
             return callback
 
         return decorator
-            
 
     async def load(self, bot: commands.Bot) -> None:
         await asyncio.gather(hook() for hook in self._pre_load_hooks)
@@ -256,10 +258,7 @@ class Plugin:
 
         return wrapper
 
-    def create_extension_handlers(self) -> t.Tuple[
-        t.Callable[[commands.Bot], None],
-        t.Callable[[commands.Bot], None],
-    ]:
+    def create_extension_handlers(self) -> t.Tuple[SetupFunc, SetupFunc]:
         def setup(bot: commands.Bot) -> None:
             asyncio.create_task(self.load(bot))
 
@@ -267,22 +266,3 @@ class Plugin:
             asyncio.create_task(self.unload(bot))
 
         return setup, teardown
-
-
-# def with_metadata(
-#     *,
-#     name: t.Optional[str] = None,
-#     category: t.Optional[str] = None,
-#     command_attrs: CommandParams = CommandParams(),
-#     slash_command_attrs: SlashCommandParams = SlashCommandParams(),
-#     message_command_attrs: AppCommandParams = AppCommandParams(),
-#     user_command_attrs: AppCommandParams = AppCommandParams(),
-# ) -> Plugin:
-#     return Plugin(PluginMetadata(
-#         name=name or _get_source_module_name(),
-#         category=category,
-#         command_attrs=command_attrs,
-#         slash_command_attrs=slash_command_attrs,
-#         message_command_attrs=message_command_attrs,
-#         user_command_attrs=user_command_attrs, 
-#     ))

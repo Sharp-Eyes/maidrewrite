@@ -60,7 +60,7 @@ class Battlesuit(api_types.ContentBase):  # TODO: skills
                 key = slot.value if (slot := template.get_arg("slot")) else template.name
                 results[key] = {
                     "rarity": rarity.value if (rarity := template.get_arg("rarity")) else "0",
-                    "name": name.value if (name := template.get_arg("1")) else "..."
+                    "name": name.value if (name := template.get_arg("1")) else "...",
                 }
 
             # Extract recommendation scores...

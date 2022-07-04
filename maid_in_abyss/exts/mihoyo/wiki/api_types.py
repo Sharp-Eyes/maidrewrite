@@ -4,7 +4,6 @@ import typing as t
 import pydantic
 import wikitextparser
 
-
 # API response types
 
 _ContinueAPIResponseComponent = t.TypedDict(
@@ -34,6 +33,7 @@ class AnyResponse(
 
 RARITY_SUFFIX_PATTERN = re.compile(r"/\d-star$", flags=re.I)
 
+
 def _strip_rarity(title: str) -> str:
     return RARITY_SUFFIX_PATTERN.sub("", title, 1)
 
@@ -62,7 +62,7 @@ class PageInfoValidator(pydantic.BaseModel, extra=pydantic.Extra.forbid):
             "categories": [category.title for category in self.categories],
             "alias_of": title,
         }
-        
+
         yield base | {"title": title}
 
         for redirect in self.redirects:
@@ -77,7 +77,6 @@ class WikiText(wikitextparser.WikiText):
 
     @classmethod
     def __get_validators__(cls):
-
         def _validate(value: t.Any):
             if isinstance(value, wikitextparser.WikiText):
                 return value
@@ -109,6 +108,7 @@ class PageContentValidator(pydantic.BaseModel, extra=pydantic.Extra.forbid):
 
 
 # Content models
+
 
 class ContentBase(pydantic.BaseModel):
     class Config:

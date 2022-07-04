@@ -37,7 +37,7 @@ class Stigma(api_types.ContentBase):
     obtain: t.Mapping[str, bool]
 
     @pydantic.root_validator(pre=True)
-    def _pack_obtain(cls, values: dict[str, t.Any]):
+    def _pack_obtain(cls, values: t.Dict[str, t.Any]):
         base = "obtain"  # all fields that contain source data start with 'obtain'
         values[base] = {k.removeprefix(base): v for k, v in values.items() if base in k}
         return values
@@ -134,8 +134,8 @@ class StigmataSet(api_types.ContentBase):
     def get_main_set_with_bonuses(
         self,
     ) -> t.Union[
-        t.Tuple[t.Sequence[Stigma], t.Sequence[SetBonus]], 
-        tuple[tuple[()], tuple[()]]
+        t.Tuple[t.Sequence[Stigma], t.Sequence[SetBonus]],
+        t.Tuple[t.Tuple[()], t.Tuple[()]],
     ]:
         """The main set that contributes to the `StigmataSet` set-bonus, and the set-bonuses
         provided by the set.

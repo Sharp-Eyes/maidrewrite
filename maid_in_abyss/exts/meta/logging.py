@@ -1,11 +1,10 @@
 import logging
 import typing as t
 
-import disnake
-from disnake.ext import commands
-
 import bot
+import disnake
 import utilities
+from disnake.ext import commands
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +53,7 @@ async def on_slash_command(inter: disnake.ApplicationCommandInteraction) -> None
         return
 
     LOGGER.info(
-        "Slash command `{command!s}` by {author!s} ({author.id}) in {channel!s} ({channel.id}): {content}".format(
+        "Slash command `{command!s}` by {author!s} ({author.id}) in {channel!s} ({channel.id}): {content}".format(  # noqa: E501
             author=inter.author,
             channel=inter.channel,
             command=inter.application_command.qualified_name,

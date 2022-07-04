@@ -1,44 +1,10 @@
 import logging
 import logging.handlers
 import os
-import sys
 import pathlib
-# from pathlib import Path
+import sys
 
 import coloredlogs
-
-
-# def get_logger(*args, **kwargs) -> logging.Logger:
-#     """Stub method for logging.getLogger."""
-#     return logging.getLogger(*args, **kwargs)
-
-
-# def _set_debug_loggers() -> None:
-#     """
-#     Set loggers to the DEBUG level according to the value from the DEBUG_LOGGERS env var.
-
-#     When the env var is a list of logger names delimited by a comma,
-#     each of the listed loggers will be set to the debug level.
-
-#     If this list is prefixed with a "!", all of the loggers except the listed ones will be set to the debug level.
-
-#     Otherwise if the env var begins with a "*",
-#     the root logger is set to the debug level and the contents are parsed like the above.
-#     """
-#     level_filter = os.environ.get("DEBUG_LOGGERS")
-#     if level_filter:
-#         if level_filter.startswith("*"):
-#             logging.getLogger().setLevel(logging.DEBUG)
-#             level_filter = level_filter.strip("*")
-
-#         if level_filter.startswith("!"):
-#             logging.getLogger().setLevel(logging.DEBUG)
-#             for logger_name in level_filter.strip("!, ").split(","):
-#                 logging.getLogger(logger_name.strip()).setLevel(logging.DEBUG)
-
-#         else:
-#             for logger_name in level_filter.strip().split(","):
-#                 logging.getLogger(logger_name.strip()).setLevel(logging.DEBUG)
 
 
 def setup() -> None:

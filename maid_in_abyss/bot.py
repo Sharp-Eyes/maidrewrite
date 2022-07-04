@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-import aiohttp
 import typing as t
 
-import redis.asyncio
+import aiohttp
 import databases
+import redis.asyncio
 from disnake.ext import commands
-
 from utilities import plugin
 
-class Maid_in_Abyss(commands.Bot):
 
+class Maid_in_Abyss(commands.Bot):
     def __init__(
         self,
         command_prefix: t.Callable[..., t.List[str]] = commands.when_mentioned,
@@ -27,5 +26,3 @@ class Maid_in_Abyss(commands.Bot):
 
     async def load_plugin(self, plugin: plugin.Plugin) -> None:
         await plugin.load(self)
-
-

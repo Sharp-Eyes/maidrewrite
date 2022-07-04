@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import enum
-import typing
+import typing as t
 
-
-T = typing.TypeVar("T", bound=enum.Enum)
+T = t.TypeVar("T", bound=enum.Enum)
 
 
 class RequestCategoryEmoji(str, enum.Enum):
@@ -25,16 +24,17 @@ class RequestCategory(str, enum.Enum):
 
 
 class NameValidatableEnum(enum.Enum):
-
     @classmethod
-    def __get_validators__(cls: typing.Type[T]) -> typing.Generator[typing.Callable[[str], T], None, None]:
+    def __get_validators__(cls: t.Type[T]) -> t.Generator[t.Callable[[str], T], None, None]:
         yield lambda value: cls[value.upper().replace(" ", "_")]
 
 
 # Battlesuits
 
+
 class BattlesuitRarityCategory(str, enum.Enum):
     """Battlesuit rarities as they appear on the wiki"""
+
     R1 = B = "Category:B-rank_Battlesuits"
     R2 = A = "Category:A-rank_Battlesuits"
     R3 = S = "Category:S-rank_Battlesuits"
@@ -44,6 +44,7 @@ class BattlesuitRarityCategory(str, enum.Enum):
 
 class BattlesuitRarityEmoji(str, enum.Enum):
     """Battlesuit emoji as they appear on the wiki"""
+
     B = "<:Rank_B:643906316716474379>"
     A = "<:Rank_A:643906316317884447>"
     S = "<:Rank_S:643906316422742047>"
@@ -53,6 +54,7 @@ class BattlesuitRarityEmoji(str, enum.Enum):
 
 class BattlesuitRarity(str, enum.Enum):
     """Battlesuit rarities (ranks) as they appear on the wiki."""
+
     R1 = B = "B"
     R2 = A = "A"
     R3 = S = "S"
@@ -72,6 +74,7 @@ class BattlesuitRarity(str, enum.Enum):
 
 class BattlesuitTypeCategory(str, enum.Enum):
     """Battlesuit type categories as they appear on the wiki."""
+
     BIO = "Category:BIO-type Battlesuits"
     PSY = "Category:PSY-type Battlesuits"
     MECH = "Category:MECH-type Battlesuits"
@@ -81,6 +84,7 @@ class BattlesuitTypeCategory(str, enum.Enum):
 
 class BattlesuitTypeColour(int, enum.Enum):
     """Display colours for battlesuit types."""
+
     BIO = 0xFFB833
     PSY = 0xFE46CF
     MECH = 0x2FE0FF
@@ -90,6 +94,7 @@ class BattlesuitTypeColour(int, enum.Enum):
 
 class BattlesuitTypeEmoji(str, enum.Enum):
     """Display emoji for battlesuit types."""
+
     BIO = "<:Type_BIO:643900338864259072>"
     PSY = "<:Type_PSY:643900338683772939>"
     MECH = "<:Type_MECH:643900338868453417>"
@@ -99,6 +104,7 @@ class BattlesuitTypeEmoji(str, enum.Enum):
 
 class BattlesuitType(str, enum.Enum):
     """Battlesuit types as they appear on the wiki."""
+
     BIO = "BIO"
     PSY = "PSY"
     MECH = "MECH"
@@ -123,9 +129,10 @@ class BattlesuitType(str, enum.Enum):
 
 class BattlesuitCoreStrengthEmoji(str, NameValidatableEnum):
     """Battlesuit core strength identifier emoji.
-    
+
     Unlike normal enums, these are validated by member name instead of value.
     """
+
     ICE_DMG = "<:Ice_DMG:911355738008453151>"
     FIRE_DMG = "<:Fire_DMG:911355738042007572>"
     LIGHTNING_DMG = "<:Lightning_DMG:911355737832304650>"
@@ -148,7 +155,7 @@ class BattlesuitCoreStrengthEmoji(str, NameValidatableEnum):
     AERIAL = "<:Aerial:938545043038416936>"
 
     @classmethod
-    def __get_validators__(cls: typing.Type[T]) -> typing.Generator[typing.Callable[[str], T], None, None]:
+    def __get_validators__(cls: t.Type[T]) -> t.Generator[t.Callable[[str], T], None, None]:
         yield lambda value: cls[value.upper().replace(" ", "_")]
 
 
@@ -172,6 +179,7 @@ STAR = "<:icon_rarity_star:641631459865526302>"
 
 class StigmaRarityCategory(str, enum.Enum):
     """Stigma rarity categories as they appear on the wiki"""
+
     R1 = "Category:1-star Stigmata"
     R2 = "Category:2-star Stigmata"
     R3 = "Category:3-star Stigmata"
@@ -181,6 +189,7 @@ class StigmaRarityCategory(str, enum.Enum):
 
 class StigmaRarity(int, enum.Enum):
     """Stigma rarities as they appear on the wiki."""
+
     R1 = 1
     R2 = 2
     R3 = 3
@@ -206,6 +215,7 @@ class StigmaSlotEmoji(str, enum.Enum):
 
 class StigmaSlotColour(int, enum.Enum):
     """Display colours for stigmata slots."""
+
     TOP = 0xFF9279
     MIDDLE = 0x9DAAFE
     BOTTOM = 0xB2C964
@@ -213,6 +223,7 @@ class StigmaSlotColour(int, enum.Enum):
 
 class StigmaSlot(str, enum.Enum):
     """Valid equipment slots for stigmata."""
+
     TOP = "T"
     MIDDLE = "M"
     BOTTOM = "B"
@@ -230,8 +241,10 @@ class StigmaSlot(str, enum.Enum):
 
 # Weapons
 
+
 class WeaponRarityCategory(str, enum.Enum):
     """Weapon rarity categories as they appear on the wiki."""
+
     R1 = "Category:1-Star Weapons"
     R2 = "Category:2-Star Weapons"
     R3 = "Category:3-Star Weapons"
@@ -242,6 +255,7 @@ class WeaponRarityCategory(str, enum.Enum):
 
 class WeaponRarity(int, enum.Enum):
     """Weapon rarities as they appear on the wiki"""
+
     R1 = 1
     R2 = 2
     R3 = 3
@@ -261,6 +275,7 @@ class WeaponRarity(int, enum.Enum):
 
 class WeaponCategory(str, enum.Enum):
     """Weapon type categories as they appear on the wiki."""
+
     PISTOL = "Category:Pistols"
     KATANA = "Category:Katanas"
     CANNON = "Category:Cannons"
@@ -275,6 +290,7 @@ class WeaponCategory(str, enum.Enum):
 
 class WeaponType(str, enum.Enum):
     """Weapon types as they appear on the wiki."""
+
     PISTOL = "Pistols"
     KATANA = "Katanas"
     CANNON = "Cannons"
@@ -294,10 +310,12 @@ class WeaponType(str, enum.Enum):
 
 # Display
 
+
 class Emoji(str, enum.Enum):
     """Emoji used in visualisation of HI3 Wiki-related content.
-    
+
     When used in pydantic models, unlike normal Enums, validation is done by name.
     """
+
     PASSIVE = "<:Passive:914596917961445416>"
     ACTIVE = "<:Active:914594001565413378>"

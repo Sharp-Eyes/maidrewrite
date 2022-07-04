@@ -1,20 +1,19 @@
 from __future__ import annotations
 
-import aiohttp
 import asyncio
 import logging
 import typing as t
 
+import aiohttp
+import bot
+import constants
+import database.meta
+import log
 import pydantic
 import redis.asyncio
 import sqlalchemy
 import uvloop
 from disnake.ext import commands
-
-import bot
-import constants
-import database.meta
-import log
 
 log.setup()
 LOGGER = logging.getLogger(__name__)
@@ -55,7 +54,9 @@ def create_redis_session(use_fakeredis: bool) -> redis.asyncio.Redis[t.Any]:
 
 @commands.is_owner()
 @commands.command(name="reload", aliases=["r"])
-async def reload_(ctx: commands.Context[bot.Maid_in_Abyss], plugin: str = "exts.mihoyo.wiki.plugin"):
+async def reload_(
+    ctx: commands.Context[bot.Maid_in_Abyss], plugin: str = "exts.mihoyo.wiki.plugin"
+):
     ctx.bot.reload_extension(plugin)
     await ctx.send(f"Successfully reloaded plugin {plugin}!")
 
@@ -65,7 +66,7 @@ async def main():
         commands.when_mentioned,
         redis=create_redis_session(constants.RedisConfig.USE_FAKEREDIS),
         database=database.meta.database,
-        session=await create_client_session()
+        session=await create_client_session(),
     )
 
     database.meta.metadata.create_all(sqlalchemy.create_engine(constants.DBConfig.URL))

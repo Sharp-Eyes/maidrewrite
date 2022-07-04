@@ -1,12 +1,11 @@
-import typing as t
-import aiohttp
 import logging
+import typing as t
 
+import aiohttp
 import pydantic
 import wikitextparser
 
 from . import api_types
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,17 +54,17 @@ class WikiRequest(t.AsyncIterator[T]):
                     warnings=", ".join(
                         f"{item}={warn['*']}"
                         for item, warn in data["warnings"].items()
-                    ),
+                    ),  # fmt: skip
                 )
             )
 
-        self._continue = data.get("continue", {}) 
+        self._continue = data.get("continue", {})
         return data["query"]["pages"]
 
     async def __anext__(self) -> T:
         try:
             value = next(self._iterator)
-    
+
         except StopIteration:
             if self._done:
                 raise StopAsyncIteration
