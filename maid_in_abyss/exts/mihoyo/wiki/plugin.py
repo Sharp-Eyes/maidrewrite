@@ -176,14 +176,15 @@ async def wiki_search_autocomp(inter: disnake.CommandInteraction, query: str):
 
     records: t.List[t.Any] = await inter.bot.database.fetch_all(
         """--sql
-        SELECT * FROM (
-            SELECT DISTINCT ON (alias_of)
-                pageid,
-                title,
-                alias_of,
-                title <-> :query AS dist
+        WITH ranking AS (
+            SELECT *,
+            title <-> :query as dist,
+            RANK() OVER (PARTITION BY alias_of ORDER BY title <-> :query ASC) AS r
             FROM hi3_wiki_pages
-        ) tmp
+        )
+        SELECT *
+        FROM ranking
+        WHERE r=1
         ORDER BY dist ASC
         LIMIT 25;
         """,
