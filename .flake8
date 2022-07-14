@@ -4,11 +4,17 @@
 # Allow some leeway with black
 max-line-length = 110
 per-file-ignores =
-    # Unused import, from module import *
-    **/__init__.py: F401, F403
-
-accept-encodings = utf-8
-docstring-convention = numpy
+    # `from module import *` shenanigans
+    **/__init__.py: F401, F403, F405
 
 exclude =
     env
+
+ignore =
+    # Function calls in function signatures - incompatible with ext-components
+    B008
+    # Newline before binary operator, this is in-line with PEP8.
+    W503
+
+accept-encodings = utf-8
+docstring-convention = numpy
