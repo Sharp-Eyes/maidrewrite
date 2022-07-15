@@ -39,11 +39,15 @@ class Stigma(api_types.ContentBase):
     @pydantic.root_validator(pre=True)
     def _pack_obtain(cls, values: t.Dict[str, t.Any]):
         base = "obtain"  # all fields that contain source data start with 'obtain'
-        values[base] = {k.removeprefix(base): v for k, v in values.items() if base in k}
+        if base not in values:
+            values[base] = {k.removeprefix(base): v for k, v in values.items() if base in k}
         return values
 
     @pydantic.root_validator(pre=True)
     def _unpack_stig_data(cls, values: t.Dict[str, t.Any]):
+        if "slot_name" in values:
+            return values
+
         slot = values["slot"]  # used to remove slot prefixes from stat/effect fields
         values = {k.removeprefix(f"slot{slot}_"): v for k, v in values.items()}
         values["slot_name"] = (
@@ -53,7 +57,7 @@ class Stigma(api_types.ContentBase):
 
     @pydantic.validator("rarity", pre=True)
     def _cast_rarity(cls, rarity: str):
-        return int(rarity)
+        return int(rarity) + 1  # Stigmata rarity on wiki takes lowest rank.
 
     @property
     def set_2p(self) -> t.Optional[SetBonus]:
@@ -88,10 +92,9 @@ class StigmataSet(api_types.ContentBase):
 
     @pydantic.root_validator(pre=True)
     def _validate_stigs(cls, values: t.Dict[str, t.Any]):
-        stigmata: t.Optional[t.Sequence[t.Any]] = values.get("stigmata")
-        if stigmata:
-            if not all(isinstance(stig, Stigma) for stig in stigmata):
-                raise TypeError("All stigmata must be of type `Stigmata`")
+        if "stigmata" in values:
+            return values
+
         else:
             # Assume we're parsing a set from raw data
             values["stigmata"] = stigmata = tuple(

@@ -1,10 +1,11 @@
 import logging
 import typing as t
 
-import bot
 import disnake
-import utilities
 from disnake.ext import commands
+
+import bot
+import utilities
 
 LOGGER = logging.getLogger(__name__)
 

@@ -14,6 +14,22 @@ line-length = 100
 [tool.isort]
 profile = "black"
 skip_gitignore = true
+line_length = 100
+sections = [
+    "FUTURE",
+    "STDLIB",
+    "THIRDPARTY",
+    "FIRSTPARTY",
+    "LOCALFOLDER",
+]
+known_first_party = [
+    "bot",
+    "utilities",
+    "database",
+    "exts",
+    "constants",
+    "log",
+]
 
 
 [tool.poetry]

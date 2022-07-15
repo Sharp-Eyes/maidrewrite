@@ -4,26 +4,33 @@ import urllib.parse
 import disnake
 import wikitextparser
 
-from .. import api, constants, models
+from . import constants, models
 
 # String parsers
+
+
+LINK_FMT = "Press the title at the top of this embed to visit {name}'s wiki page!"
+
+
+def truncate(string: str, length: int):
+    return string if len(string) < length - 5 else string[: length - 5] + "..."
 
 
 def urlify(s: str):
     """Convert a string value to a value more likely to be recognized by
     the HI3 wiki. Meant to be used to convert names to urls
     """
-    return urllib.parse.quote(s.replace(" ", "_"))
+    return urllib.parse.quote(s.replace(" ", "_").replace(":", "_-"))
 
 
 def image_link(name: str) -> str:
     """Tries to create an image url by name, linking to the HI3 wiki."""
-    return f"{api.WIKI_BASE}/Special:Redirect/file/{urlify(name)}.png"
+    return f"{constants.WIKI_BASE}/Special:Redirect/file/{urlify(name)}.png"
 
 
 def wiki_link(name: str) -> str:
     """Tries to create a page url linking to an HI3 wiki page."""
-    return f"{api.WIKI_BASE}{urlify(name)}"
+    return f"{constants.WIKI_BASE}{urlify(name)}"
 
 
 def discord_link(display: str, link: t.Optional[str] = None, from_display: bool = True):
@@ -37,9 +44,12 @@ TAG_MAPPING = {
     "inc": ("**", "**"),
     "increase": ("**", "**"),
     "color-blue": ("**", "**"),
-    "inco": ("```ansi\n\u001b[1;33m", "\u001b[0m```"),
-    "br": "\n",
+    "inco": ("**", "**"),
 }
+
+
+SELF_CLOSING_TAG_MAPPING = {"br": "\n"}
+
 
 TEMPLATE_MAPPING = {"star": "\N{BLACK STAR}"}
 
@@ -75,8 +85,7 @@ def parse_wiki_str(string: str) -> str:  # TODO: possibly refactor
             replace(list_str, span_l, span_l + match_l, repl_l)
             replace(list_str, span_l + match_h, span_h, repl_r)
         else:  # remove the whole self-closing tag
-            repl_single = TAG_MAPPING.get(tag.name, None)
-            assert isinstance(repl_single, str)
+            repl_single = SELF_CLOSING_TAG_MAPPING.get(tag.name, None)
             replace(list_str, span_l, span_h, repl_single)
 
     for wikilink in wt.wikilinks:
@@ -135,7 +144,7 @@ def make_battlesuit_header_embed(battlesuit: models.Battlesuit) -> disnake.Embed
             icon_url=image_link(f"Valkyrie_{battlesuit.rank}"),
         )
         .set_thumbnail(url=image_link(f"{name}_(Avatar)"))
-        .set_footer(text=f"Press the title at the top of this embed to visit {name}'s wiki page!")
+        .set_footer(text=LINK_FMT.format(name=name))
     )
 
 
@@ -145,12 +154,12 @@ def make_battlesuit_info_embed(battlesuit: models.Battlesuit) -> disnake.Embed:
         value=(
             " ".join(battlesuit.core_strengths)
             + f"\nType: {battlesuit.type.emoji} {battlesuit.type.name}"
-            + f"\nValkyrie: {constants.RequestCategoryEmoji.VALKYRIE} {discord_link(battlesuit.character)}"
+            + f"\nValkyrie: {constants.RequestCategoryEmoji.BATTLESUITS} {discord_link(battlesuit.character)}"
             + (
-                f"\nAugment (of): {constants.RequestCategoryEmoji.VALKYRIE} {discord_link(battlesuit.augment)}"  # noqa: E501
+                f"\nAugment (of): {constants.RequestCategoryEmoji.BATTLESUITS} {discord_link(battlesuit.augment)}"  # noqa: E501
                 if battlesuit.augment
                 else ""
-            )
+            )  # TODO: add awakenings
         ),
         inline=False,
     )
@@ -158,7 +167,7 @@ def make_battlesuit_info_embed(battlesuit: models.Battlesuit) -> disnake.Embed:
         info_embed.add_field(
             name=f"{recommendation.type.title()}:",
             value=(
-                f"{constants.RequestCategoryEmoji.EQUIPMENT} {discord_link(recommendation.weapon.name)}\n"
+                f"{constants.RequestCategoryEmoji.WEAPONS} {discord_link(recommendation.weapon.name)}\n"
                 f"{constants.StigmaSlotEmoji.TOP} {discord_link(recommendation.T.name)}\n"
                 f"{constants.StigmaSlotEmoji.MIDDLE} {discord_link(recommendation.M.name)}\n"
                 f"{constants.StigmaSlotEmoji.BOTTOM} {discord_link(recommendation.B.name)}"
@@ -177,7 +186,8 @@ def prettify_battlesuit(battlesuit: models.Battlesuit) -> t.List[disnake.Embed]:
 
 def make_stigma_description(stigma: models.Stigma, show_rarity: bool = False):
     """Generate the description for a single `Stigma`."""
-    desc = (f"Rarity: {stigma.rarity.emoji}\n" if show_rarity else "") + stigma.effect
+    effect = parse_wiki_str(stigma.effect)
+    description = (f"Rarity: {stigma.rarity.emoji}\n" if show_rarity else "") + effect
 
     stats = ",\u2003".join(
         f"**{name}**: {stat}"
@@ -189,16 +199,22 @@ def make_stigma_description(stigma: models.Stigma, show_rarity: bool = False):
         )
         if stat
     )
-    return f"{parse_wiki_str(desc)}\n\n{stats}"
+    return truncate(description, 1024), stats
 
 
 def make_stigma_embed(stigma: models.Stigma, show_rarity: bool) -> disnake.Embed:
     """Generate a display embed for a single `Stigma`."""
+    description, stats = make_stigma_description(stigma, show_rarity)
+
     return (
         disnake.Embed(
             title=stigma.effect_name,
-            description=make_stigma_description(stigma, show_rarity),
+            description=description,
             colour=stigma.slot.colour,
+        )
+        .add_field(
+            name="\u200b",
+            value=stats,
         )
         .set_author(
             name=stigma.name,
@@ -206,6 +222,7 @@ def make_stigma_embed(stigma: models.Stigma, show_rarity: bool) -> disnake.Embed
             icon_url=image_link(f"Stigmata_{stigma.slot.name.title()}"),
         )
         .set_thumbnail(url=image_link(f"{stigma.set_name} ({stigma.slot}) (Icon)"))
+        .set_footer(text=LINK_FMT.format(name=stigma.set_name))
     )
 
 
@@ -216,7 +233,9 @@ def make_set_bonus_embed(
     set_embed = disnake.Embed(description=f"Rarity: {set_rarity}")
     for set_bonus in set_bonuses:
         set_embed.add_field(
-            name=set_bonus.name, value=parse_wiki_str(set_bonus.effect), inline=True
+            name=set_bonus.name,
+            value=parse_wiki_str(set_bonus.effect),
+            inline=False,
         )
     return set_embed
 
@@ -251,6 +270,7 @@ def make_weapon_header_embed(weapon: models.Weapon) -> disnake.Embed:
             icon_url=image_link(f"{weapon.type} (Type)"),
         )
         .set_thumbnail(image_link(f"{weapon.name} ({weapon.rarity}) (Icon)"))
+        .set_footer(text=LINK_FMT.format(name=weapon.name))
     )
 
 
@@ -263,7 +283,11 @@ def make_weapon_info_embed(weapon: models.Weapon) -> disnake.Embed:
             else constants.WeaponSkillTypeEmoji.PASSIVE
         )
 
-        info_embed.add_field(name=f"{icon} {skill.name}", value=parse_wiki_str(skill.effect))
+        info_embed.add_field(
+            name=f"{icon} {skill.name}",
+            value=truncate(parse_wiki_str(skill.effect), 1024),
+            inline=False,
+        )
     return info_embed
 
 

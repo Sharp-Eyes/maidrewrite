@@ -5,31 +5,18 @@ import logging
 import typing as t
 
 import aiohttp
-import bot
-import constants
-import database.meta
-import log
-import pydantic
 import redis.asyncio
 import sqlalchemy
 import uvloop
 from disnake.ext import commands
 
+import bot
+import constants
+import database.meta
+import log
+
 log.setup()
 LOGGER = logging.getLogger(__name__)
-
-
-try:
-    import orjson
-
-    def orjson_dumps(v: t.Any, *, default: t.Callable[[t.Any], t.Any]) -> str:
-        return orjson.dumps(v, default=default).decode()
-
-    pydantic.BaseConfig.json_loads = orjson.loads
-    pydantic.BaseConfig.json_dumps = orjson_dumps
-
-except ModuleNotFoundError:
-    pass
 
 
 async def create_client_session():
@@ -43,9 +30,9 @@ def create_redis_session(use_fakeredis: bool) -> redis.asyncio.Redis[t.Any]:
     if use_fakeredis:
         import fakeredis.aioredis
 
-        session = fakeredis.aioredis.FakeRedis.from_url(url)
+        session = fakeredis.aioredis.FakeRedis.from_url(url, decode_responses=True)
     else:
-        connection_pool = redis.asyncio.BlockingConnectionPool.from_url(url)
+        connection_pool = redis.asyncio.BlockingConnectionPool.from_url(url, decode_responses=True)
         session: redis.asyncio.Redis[t.Any] = redis.asyncio.Redis(connection_pool=connection_pool)
 
     LOGGER.debug(f"Started redis session at {url}")
@@ -76,6 +63,7 @@ async def main():
     maid_in_abyss.load_extension("exts.mihoyo.wiki.plugin")
     maid_in_abyss.load_extension("exts.meta.eval")
     maid_in_abyss.load_extension("exts.meta.logging")
+    maid_in_abyss.load_extension("exts.meta.delete")
 
     await maid_in_abyss.start(constants.BotConfig.TOKEN)
 

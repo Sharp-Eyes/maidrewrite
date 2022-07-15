@@ -53,11 +53,9 @@ class PageInfoValidator(pydantic.BaseModel, extra=pydantic.Extra.forbid):
 
     def unpack_aliases(
         self,
-        *,
-        base_params: t.Dict[str, t.Any],
     ) -> t.Iterator[t.Dict[str, t.Any]]:
         title = _strip_rarity(self.title)
-        base = base_params | {
+        base = {
             "pageid": self.pageid,
             "categories": [category.title for category in self.categories],
             "alias_of": title,

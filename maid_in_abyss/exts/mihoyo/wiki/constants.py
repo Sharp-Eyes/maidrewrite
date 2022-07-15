@@ -1,15 +1,17 @@
-from __future__ import annotations
-
 import enum
 import typing as t
 
 T = t.TypeVar("T", bound=enum.Enum)
 
 
+API_BASE = "https://honkaiimpact3.fandom.com/api.php?"
+WIKI_BASE = "https://honkaiimpact3.fandom.com/"
+
+
 class RequestCategoryEmoji(str, enum.Enum):
     STIGMATA = "<:Stigmata_Generic:914200965136138241>"
-    EQUIPMENT = "<:Equipment_Generic:642086143571132420>"
-    VALKYRIE = "<:Valkyrie_Generic:909813519103430697>"
+    BATTLESUITS = "<:Valkyrie_Generic:909813519103430697>"
+    WEAPONS = "<:Equipment_Generic:642086143571132420>"
 
 
 class RequestCategory(str, enum.Enum):
@@ -20,13 +22,7 @@ class RequestCategory(str, enum.Enum):
     @property
     def emoji(self) -> RequestCategoryEmoji:
         """The display emoji belonging to this request category."""
-        return RequestCategoryEmoji[self]
-
-
-class NameValidatableEnum(enum.Enum):
-    @classmethod
-    def __get_validators__(cls: t.Type[T]) -> t.Generator[t.Callable[[str], T], None, None]:
-        yield lambda value: cls[value.upper().replace(" ", "_")]
+        return RequestCategoryEmoji[self.name]
 
 
 # Battlesuits
@@ -99,7 +95,7 @@ class BattlesuitTypeEmoji(str, enum.Enum):
     PSY = "<:Type_PSY:643900338683772939>"
     MECH = "<:Type_MECH:643900338868453417>"
     QUA = "<:Type_QUA:643900338943819777>"
-    IMG = "<:Type_IMG:909205004269813773>"
+    IMG = "<:Type_IMG:996931175287365753>"
 
 
 class BattlesuitType(str, enum.Enum):
@@ -127,7 +123,7 @@ class BattlesuitType(str, enum.Enum):
         return BattlesuitTypeEmoji[self.name]
 
 
-class BattlesuitCoreStrengthEmoji(str, NameValidatableEnum):
+class BattlesuitCoreStrengthEmoji(str, enum.Enum):
     """Battlesuit core strength identifier emoji.
 
     Unlike normal enums, these are validated by member name instead of value.
@@ -156,7 +152,13 @@ class BattlesuitCoreStrengthEmoji(str, NameValidatableEnum):
 
     @classmethod
     def __get_validators__(cls: t.Type[T]) -> t.Generator[t.Callable[[str], T], None, None]:
-        yield lambda value: cls[value.upper().replace(" ", "_")]
+        def validate(value: str) -> T:
+            try:
+                return cls[value.upper().replace(" ", "_")]
+            except KeyError:
+                return t.cast(T, cls(value))
+
+        yield validate
 
 
 class BattlesuitRecommendation(str, enum.Enum):

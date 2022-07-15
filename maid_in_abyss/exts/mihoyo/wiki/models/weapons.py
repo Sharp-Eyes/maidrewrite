@@ -29,7 +29,7 @@ class WeaponSkill(api_types.ContentBase):
 
 class Weapon(api_types.ContentBase):
     name: str
-    type: t.Union[constants.WeaponType, str]
+    type: str  # can't use constants.WeaponType here because they're oddly inconsistent...
     rarity: constants.WeaponRarity
     # obtain: t.Optional[str] = None
     attack: int = pydantic.Field(alias="ATK")
@@ -43,7 +43,8 @@ class Weapon(api_types.ContentBase):
     @pydantic.root_validator(pre=True)
     def _pack_obtain(cls, values: t.Dict[str, t.Any]):
         base = "obtain"  # all fields that contain source data start with 'obtain'
-        values[base] = {k.removeprefix(base): v for k, v in values.items() if base in k}
+        if base not in values:
+            values[base] = {k.removeprefix(base): v for k, v in values.items() if base in k}
         return values
 
     # @pydantic.root_validator(pre=True)
@@ -54,6 +55,9 @@ class Weapon(api_types.ContentBase):
 
     @pydantic.root_validator(pre=True)
     def _pack_skills(cls, values: t.Dict[str, t.Any]):
+        if "skills" in values:
+            return values
+
         values["skills"] = skills = []
         for i in range(1, 5):
             if not (name := values.get(f"skill{i}")):

@@ -3,86 +3,53 @@ import logging
 import time
 import typing as t
 
-import aiohttp
-import bot
 import disnake
+from disnake.ext import commands, components
+
+import bot
 import utilities
 from database.models import hoyo_wiki
+from exts.meta import delete
 
-from . import api, api_types, constants, interface, models
+from . import api, constants
 
 __all__ = ("setup", "teardown", "plugin")
 
-LOGGER = logging.Logger(__name__)
-
-plugin = utilities.Plugin.with_metadata(
-    name="hi3_wiki",
-    category="Wiki",
-    slash_command_attrs={"guild_ids": [701039771157397526]},
-)
+LOGGER = logging.getLogger(__name__)
 
 
-def safe_key(key: str):
-    return key.lower().replace(" ", "_")
+WikiLinkDict = t.Dict[str, t.Tuple[str, str]]
 
 
-async def _fetch_unique_pages(
-    session: aiohttp.ClientSession,
-    *,
-    request_base_params: t.Dict[str, str],
-    model_base_params: t.Optional[t.Dict[str, t.Any]] = None,
-    **request_params: str,
-) -> t.AsyncGenerator[t.Dict[str, t.Any], t.Any]:
-    titles: t.Set[t.Dict[str, t.Any]] = set()
-    async for page in api.WikiRequest(
-        session, model=api_types.PageInfoValidator, params=request_base_params | request_params
-    ):
-        for alias_data in page.unpack_aliases(base_params=model_base_params or {}):
-            if (title := alias_data["title"]) in titles:
-                continue
-
-            titles.add(title)
-            yield alias_data
-
-
-async def _fetch_and_store_pages(
-    method: t.Callable[[t.List[hoyo_wiki.PageInfo]], t.Coroutine[t.Any, t.Any, None]],
-    session: aiohttp.ClientSession,
-    *,
-    request_base_params: t.Dict[str, t.Any],
-    model_base_params: t.Optional[t.Dict[str, t.Any]] = None,
-    **request_params: t.Any,
-):
-    await method(
-        [
-            hoyo_wiki.PageInfo.construct(**page_data)
-            async for page_data in _fetch_unique_pages(
-                session,
-                request_base_params=request_base_params,
-                model_base_params=model_base_params,
-                **request_params,
-            )
-        ]
+async def build_delete_button(*, user_id: int) -> disnake.ui.Button[None]:
+    return await delete.delete_button_listener.build_component(
+        user_id=user_id,
+        permissions=disnake.Permissions(manage_messages=True),
     )
 
 
-@plugin.slash_command()
+plugin = utilities.Plugin.with_metadata(
+    name="hi3_wiki",
+    category="wiki",
+)
+
+
+@commands.is_owner()
+@plugin.slash_command(guild_ids=[701039771157397526])
 async def cache(inter: disnake.CommandInteraction, clear: bool = False):
     assert isinstance(inter.bot, bot.Maid_in_Abyss)  # cope with inter not being generic over bot
 
     await inter.response.defer()
 
-    base_params: t.Dict[str, t.Any] = {
+    request_base_params: t.Dict[str, t.Any] = {
         "action": "query",
         "format": "json",
         "prop": "categories|redirects",
         "generator": "categorymembers",
         "utf8": 1,
         "cllimit": "max",
-        "clcategories": ...,
         "rdprop": "title",
         "rdlimit": "max",
-        "gcmtitle": ...,
         "gcmlimit": "max",
     }
 
@@ -100,11 +67,12 @@ async def cache(inter: disnake.CommandInteraction, clear: bool = False):
 
     await asyncio.gather(
         *[
-            _fetch_and_store_pages(
+            api.fetch_and_store_pages(
                 method,
                 inter.bot.default_session,
-                request_base_params=base_params,
-                model_base_params={"category": request_category},
+                model_params={"main_category": request_category.value},
+                # Request parameters...
+                **request_base_params,
                 clcategories="|".join(sub_categories),
                 gcmtitle=request_category.value,
             )
@@ -116,44 +84,35 @@ async def cache(inter: disnake.CommandInteraction, clear: bool = False):
 
 
 @plugin.slash_command()
-async def readcache(inter: disnake.CommandInteraction, query: str):
+async def wiki(inter: disnake.CommandInteraction):
+    ...
+
+
+@wiki.sub_command()
+async def hi3(inter: disnake.CommandInteraction, query: str):
     assert isinstance(inter.bot, bot.Maid_in_Abyss)  # cope
 
-    page_params = {
-        "action": "query",
-        "format": "json",
-        "prop": "revisions",
-        "pageids": query,
-        "rvprop": "content",
-        "rvslots": "main",
-    }
+    embeds, wikilinks = await api.fetch_content(
+        inter.bot.redis, inter.bot.default_session, query=query
+    )
 
-    async for page in api.WikiRequest(
-        inter.bot.default_session,
-        model=api_types.PageContentValidator,
-        params=page_params,
-    ):
-        revision_data = api.wikitext_to_dict(page.revision.content)
+    if wikilinks:
+        components: t.List[disnake.ui.MessageUIComponent] = [
+            disnake.ui.Select(
+                options=build_select_options(wikilinks),
+                placeholder="Continue browsing...",
+                custom_id=await page_subselector.build_custom_id(
+                    author_id=inter.user.id,
+                    current_page_id=query,
+                ),
+            )
+        ]
+    else:
+        components = []
 
-        if "battlesuit" in revision_data:
-            battlesuit = models.Battlesuit.parse_obj(revision_data)
-            embeds = interface.display.prettify_battlesuit(battlesuit)
-
-        elif {"slotT", "slotM", "slotB"}.intersection(revision_data):
-            stigmata = models.StigmataSet.parse_obj(revision_data)
-            embeds = interface.display.prettify_stigmata(stigmata)
-
-        elif {"ATK", "CRT"}.issubset(revision_data):
-            weapon = models.Weapon.parse_obj(revision_data)
-            embeds = interface.display.prettify_weapon(weapon)
-
-        else:
-            print(list(revision_data.keys()))
-            await inter.send(str(revision_data)[:2000])
-            return
-
-        await inter.send(embeds=embeds)
-        return
+    components.append(await build_delete_button(user_id=inter.user.id))
+    await inter.response.send_message(embeds=embeds, components=components)
+    return
 
 
 def make_autocomp_title(record: t.Any):
@@ -164,12 +123,12 @@ def make_autocomp_title(record: t.Any):
     )
 
 
-@readcache.autocomplete("query")
+@hi3.autocomplete("query")
 async def wiki_search_autocomp(inter: disnake.CommandInteraction, query: str):
     assert isinstance(inter.bot, bot.Maid_in_Abyss)  # cope
 
     # TODO: Maybe don't rely on the db for this if the bot gets bigger,
-    #       but as-is, this query takes ~3 ms (+ overhead), so it's probably
+    #       but as-is, this query takes ~10 ms (+/- overhead), so it's probably
     #       fast enough for the time being.
 
     t1 = time.perf_counter()
@@ -192,10 +151,90 @@ async def wiki_search_autocomp(inter: disnake.CommandInteraction, query: str):
     )
 
     tdiff = time.perf_counter() - t1
-    LOGGER.info(f"Completed autocomplete query in {tdiff:.3f}ms.")
-    print(f"Completed autocomplete query in {tdiff*1000:.3f}ms.")
+    LOGGER.debug(f"Completed autocomplete query in {tdiff*1000:.3f}ms.")
 
     return {make_autocomp_title(record): str(record.pageid) for record in records}
+
+
+def build_select_options(
+    wikilinks: WikiLinkDict,
+    *,
+    back_id: t.Optional[str] = None,
+) -> t.List[disnake.SelectOption]:
+    options: t.List[disnake.SelectOption] = []
+
+    for page_id, (title, category) in wikilinks.items():
+        if page_id == back_id:
+            options.insert(
+                0,
+                disnake.SelectOption(
+                    label=f"{title} (Back)",
+                    value=page_id,
+                    emoji="<:undo:997511439055061002>",
+                ),
+            )
+            back_id = None
+            continue
+
+        options.append(
+            disnake.SelectOption(
+                label=title,
+                value=page_id,
+                emoji=constants.RequestCategory(category).emoji,
+            )
+        )
+
+    if back_id is not None:
+        options.insert(
+            0,
+            disnake.SelectOption(
+                label="Back",
+                value=back_id,
+                emoji="<:undo:997511439055061002> ",
+            ),
+        )
+
+    return options
+
+
+@plugin.listener(components.ListenerType.SELECT)
+@components.select_listener()
+async def page_subselector(
+    inter: disnake.MessageInteraction,
+    page_id: str = components.SelectValue("Continue searching...", max_values=1),
+    *,
+    current_page_id: t.Optional[str],
+    author_id: int,
+):
+    assert isinstance(inter.bot, bot.Maid_in_Abyss)
+    assert isinstance(page_subselector, components.SelectListener)
+
+    if author_id != inter.author.id:
+        raise Exception  # TODO: Add custom exception.
+
+    embeds, wikilinks = await api.fetch_content(
+        inter.bot.redis,
+        inter.bot.default_session,
+        query=page_id,
+    )
+
+    if options := build_select_options(wikilinks, back_id=current_page_id):
+        msg_components: t.List[disnake.ui.MessageUIComponent] = [
+            disnake.ui.Select(
+                options=options,
+                placeholder="Continue browsing...",
+                custom_id=await page_subselector.build_custom_id(
+                    author_id=inter.user.id,
+                    current_page_id=page_id,
+                ),
+            )
+        ]
+
+    else:
+        msg_components = []
+
+    msg_components.append(await build_delete_button(user_id=inter.user.id))
+    await inter.response.edit_message(embeds=embeds, components=msg_components)
 
 
 setup, teardown = plugin.create_extension_handlers()

@@ -9,11 +9,12 @@ import traceback
 import typing as t
 
 import aiohttp
-import bot
 import databases
 import disnake
-import utilities
 from disnake.ext import commands
+
+import bot
+import utilities
 
 LOGGER = logging.getLogger(__name__)
 

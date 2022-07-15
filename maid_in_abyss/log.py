@@ -9,7 +9,7 @@ import coloredlogs
 
 def setup() -> None:
     """Set up loggers."""
-    format_string = "%(asctime)s | %(name)-20s | %(levelname)-8s | %(message)s"
+    format_string = "%(asctime)s | %(name)-23s | %(levelname)-8s | %(message)s"
     log_format = logging.Formatter(format_string)
     root_logger = logging.getLogger()
 
@@ -38,13 +38,11 @@ def setup() -> None:
         coloredlogs.DEFAULT_LOG_FORMAT = format_string
 
     coloredlogs.install(level=logging.DEBUG, stream=sys.stdout)
-
     root_logger.setLevel(logging.DEBUG)
+
     # Silence irrelevant loggers
     logging.getLogger("databases").setLevel(logging.WARNING)
     logging.getLogger("disnake").setLevel(logging.WARNING)
     logging.getLogger("websockets").setLevel(logging.ERROR)
-
-    # _set_debug_loggers()
 
     root_logger.info("Logging initialization complete")

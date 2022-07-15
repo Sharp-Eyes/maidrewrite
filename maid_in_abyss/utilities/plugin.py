@@ -21,6 +21,8 @@ EmptyAsync = t.Callable[[], Coro[None]]
 SetupFunc = t.Callable[[commands.Bot], None]
 
 AnyCommand = commands.Command[t.Any, t.Any, t.Any]
+AnyListener = t.Callable[..., Coro[t.Any]]
+ListenerT = t.TypeVar("ListenerT", bound=AnyListener)
 
 LocalizedOptional = t.Union[t.Optional[str], disnake.Localized[t.Optional[str]]]
 PermissionsOptional = t.Optional[t.Union[disnake.Permissions, int]]
@@ -109,7 +111,7 @@ class Plugin:
         self.message_commands: t.Dict[str, commands.InvokableMessageCommand] = {}
         self.user_commands: t.Dict[str, commands.InvokableUserCommand] = {}
 
-        self.listeners: t.Dict[str, t.List[t.Callable[..., Coro[t.Any]]]] = {}
+        self.listeners: t.Dict[str, t.MutableSequence[AnyListener]] = {}
 
         self._pre_load_hooks = []
         self._post_load_hooks = []
@@ -213,7 +215,7 @@ class Plugin:
         return decorator
 
     def listener(self, event: t.Optional[str] = None):
-        def decorator(callback: t.Callable[..., Coro[t.Any]]) -> t.Callable[..., Coro[t.Any]]:
+        def decorator(callback: ListenerT) -> ListenerT:
             key = callback.__name__ if event is None else event
             self.listeners.setdefault(key, []).append(callback)
             return callback

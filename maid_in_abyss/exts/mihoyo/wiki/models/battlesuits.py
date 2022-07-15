@@ -43,11 +43,16 @@ class Battlesuit(api_types.ContentBase):  # TODO: skills
     recommendations: t.Sequence[BattlesuitRecommendation]
 
     @pydantic.validator("core_strengths", pre=True)
-    def _parse_core_strengths(cls, value: str):
+    def _parse_core_strengths(cls, value: t.Union[str, t.List[str]]):
+        if isinstance(value, list):
+            return value
         return value.split(", ") if value else []
 
     @pydantic.root_validator(pre=True)
     def _pack_recommendations(cls, values: t.Dict[str, t.Any]):
+        if "recommendations" in values:
+            return values
+
         values["recommendations"] = recommendations = []
         for category in constants.BattlesuitRecommendation:
             if not (category_data := values.get(category)):
