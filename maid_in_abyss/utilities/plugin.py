@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+import functools
 import inspect
 import logging
 import typing as t
@@ -21,8 +22,8 @@ EmptyAsync = t.Callable[[], Coro[None]]
 SetupFunc = t.Callable[[commands.Bot], None]
 
 AnyCommand = commands.Command[t.Any, t.Any, t.Any]
-AnyListener = t.Callable[..., Coro[t.Any]]
-ListenerT = t.TypeVar("ListenerT", bound=AnyListener)
+CoroFunc = t.Callable[..., Coro[t.Any]]
+CoroFuncT = t.TypeVar("CoroFuncT", bound=CoroFunc)
 
 LocalizedOptional = t.Union[t.Optional[str], disnake.Localized[t.Optional[str]]]
 PermissionsOptional = t.Optional[t.Union[disnake.Permissions, int]]
@@ -111,7 +112,7 @@ class Plugin:
         self.message_commands: t.Dict[str, commands.InvokableMessageCommand] = {}
         self.user_commands: t.Dict[str, commands.InvokableUserCommand] = {}
 
-        self.listeners: t.Dict[str, t.MutableSequence[AnyListener]] = {}
+        self.listeners: t.Dict[str, t.MutableSequence[CoroFunc]] = {}
 
         self._pre_load_hooks = []
         self._post_load_hooks = []
@@ -214,13 +215,44 @@ class Plugin:
 
         return decorator
 
-    def listener(self, event: t.Optional[str] = None):
-        def decorator(callback: ListenerT) -> ListenerT:
+    def listener(self, event: t.Optional[str] = None, *, with_error_handler: bool = True):
+        def decorator(callback: CoroFuncT) -> CoroFuncT:
             key = callback.__name__ if event is None else event
+            if with_error_handler:
+                callback = self._wrap_error_handler(callback, key + "_error")
+
             self.listeners.setdefault(key, []).append(callback)
             return callback
 
         return decorator
+
+    def _wrap_error_handler(
+        self,
+        callback: CoroFuncT,
+        handler_name: str,
+    ) -> CoroFuncT:
+        @functools.wraps(callback)
+        async def wrapped(*args: t.Any, **kwargs: t.Any):
+            try:
+                return await callback(*args, **kwargs)
+
+            except Exception as exc:
+                propagate = True
+                for handler in self.listeners.get(handler_name, []):
+                    if await handler(exc, *args, **kwargs):
+                        propagate = False
+
+                if propagate:
+                    raise
+
+        return t.cast(CoroFuncT, wrapped)
+
+    def listener_error_handler(self, event: str) -> t.Callable[[CoroFuncT], CoroFuncT]:
+        def wrapper(callback: CoroFuncT) -> CoroFuncT:
+            self.listener(event + "_error")(callback)
+            return callback
+
+        return wrapper
 
     async def load(self, bot: commands.Bot) -> None:
         await asyncio.gather(hook() for hook in self._pre_load_hooks)

@@ -190,7 +190,7 @@ def build_select_options(
             disnake.SelectOption(
                 label="Back",
                 value=back_id,
-                emoji="<:undo:997511439055061002> ",
+                emoji="<:undo:997511439055061002>",
             ),
         )
 
@@ -210,7 +210,15 @@ async def page_subselector(
     assert isinstance(page_subselector, components.SelectListener)
 
     if author_id != inter.author.id:
-        raise Exception  # TODO: Add custom exception.
+        # await inter.response.send_message(
+        #     embed=disnake.Embed(
+        #         title="You are not permitted to take this action.",
+        #         description="This dropdown menu is for another captain.",
+        #     ),
+        #     ephemeral=True,
+        # )
+        # return
+        raise utilities.exceptions.NotPermitted("This selector is for a different captain...")
 
     embeds, wikilinks = await api.fetch_content(
         inter.bot.redis,
@@ -235,6 +243,17 @@ async def page_subselector(
 
     msg_components.append(await build_delete_button(user_id=inter.user.id))
     await inter.response.edit_message(embeds=embeds, components=msg_components)
+
+
+@plugin.listener_error_handler(components.ListenerType.SELECT)
+async def on_dropdown_error(
+    exc: Exception,
+    inter: disnake.MessageInteraction,
+    *args: t.Any,
+    **kwargs: t.Any,
+):
+    await inter.response.send_message(str(exc))
+    return True
 
 
 setup, teardown = plugin.create_extension_handlers()
