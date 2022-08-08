@@ -150,14 +150,14 @@ asyncpg = {version = "*", optional = true, markers = "extra == \"postgresql\""}
 sqlalchemy = ">=1.4,<1.5"
 
 [package.extras]
-aiomysql = ["aiomysql"]
-aiopg = ["aiopg"]
-aiosqlite = ["aiosqlite"]
-asyncmy = ["asyncmy"]
-asyncpg = ["asyncpg"]
-mysql = ["aiomysql"]
-postgresql = ["asyncpg"]
 sqlite = ["aiosqlite"]
+postgresql = ["asyncpg"]
+mysql = ["aiomysql"]
+asyncpg = ["asyncpg"]
+asyncmy = ["asyncmy"]
+aiosqlite = ["aiosqlite"]
+aiopg = ["aiopg"]
+aiomysql = ["aiomysql"]
 
 [[package]]
 name = "deprecated"
@@ -175,7 +175,7 @@ dev = ["tox", "bump2version (<1)", "sphinx (<2)", "importlib-metadata (<3)", "im
 
 [[package]]
 name = "disnake"
-version = "2.6.0a4269+ge4f9dc81"
+version = "2.6.0a4322+g612937c1"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -187,7 +187,7 @@ aiohttp = ">=3.7.0,<3.9.0"
 
 [package.extras]
 discord = ["discord-disnake"]
-docs = ["sphinx (>=4.5.0,<4.6.0)", "sphinxcontrib-trio (>=1.1.2,<1.2.0)", "sphinx-hoverxref (>=1.0.1,<1.1.0)", "sphinx-autobuild (>=2021.3,<2022.0)"]
+docs = ["sphinx (>=5.1.1,<5.2.0)", "sphinxcontrib-trio (>=1.1.2,<1.2.0)", "sphinx-hoverxref (==1.1.3)", "sphinx-autobuild (>=2021.3,<2022.0)", "sphinxcontrib-towncrier (==0.2.1a0)", "towncrier (==21.9.0)"]
 speed = ["orjson (>=3.6,<4.0)", "aiodns (>=1.1)", "brotli", "cchardet"]
 voice = ["PyNaCl (>=1.3.0,<1.5)"]
 
@@ -195,11 +195,11 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/DisnakeDev/disnake"
 reference = "master"
-resolved_reference = "e4f9dc81630414c3015e7f32ea2f45203eaab3e7"
+resolved_reference = "612937c1ea7292ee5135a29ffe1a57411ba449d4"
 
 [[package]]
 name = "disnake-ext-components"
-version = "0.3.0"
+version = "0.4.0"
 description = "A component listener wrapper for disnake"
 category = "main"
 optional = false
@@ -214,7 +214,7 @@ typing-extensions = "*"
 type = "git"
 url = "https://github.com/DisnakeCommunity/disnake-ext-components"
 reference = "master"
-resolved_reference = "a7f086e73f5e5596380b63766df27e926a016d61"
+resolved_reference = "407cdb10670e9e0e13e5adad882bb90c19dd4df8"
 
 [[package]]
 name = "distlib"
@@ -291,7 +291,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "genshin"
-version = "1.2.1"
+version = "1.2.3"
 description = "An API wrapper for Genshin Impact."
 category = "main"
 optional = false
@@ -302,10 +302,10 @@ aiohttp = "*"
 pydantic = "*"
 
 [package.extras]
-all = ["browser-cookie3", "rsa", "click"]
-cli = ["click"]
-cookies = ["browser-cookie3"]
 geetest = ["rsa"]
+cookies = ["browser-cookie3"]
+cli = ["click"]
+all = ["click", "rsa", "browser-cookie3"]
 
 [[package]]
 name = "greenlet"
@@ -432,8 +432,8 @@ pydantic = ">=1.9.0,<2.0.0"
 sqlalchemy = ">=1.4.29,<2.0.0"
 
 [package.extras]
-dev = ["black", "flake8", "isort", "pip-tools", "py-githooks", "pygithub", "semver", "twine", "wheel", "codecov", "coverage", "invoke", "psycopg2-binary", "pytest", "pytest-asyncio"]
-test = ["codecov", "coverage", "invoke", "psycopg2-binary", "pytest", "pytest-asyncio"]
+test = ["pytest-asyncio", "pytest", "psycopg2-binary", "invoke", "coverage", "codecov"]
+dev = ["pytest-asyncio", "pytest", "psycopg2-binary", "invoke", "coverage", "codecov", "wheel", "twine", "semver", "pygithub", "py-githooks", "pip-tools", "isort", "flake8", "black"]
 
 [[package]]
 name = "packaging"
@@ -721,7 +721,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "644d1830c3acfdb3d556f4094c8df836ba4be2e117843b0a47382d774f5ef2c0"
+content-hash = "162bf9ad707f54b4a4310da288669f108fc03231198b1d83c7355007190f4ed7"
 
 [metadata.files]
 aiohttp = [
@@ -975,8 +975,8 @@ frozenlist = [
     {file = "frozenlist-1.3.0.tar.gz", hash = "sha256:ce6f2ba0edb7b0c1d8976565298ad2deba6f8064d2bebb6ffce2ca896eb35b0b"},
 ]
 genshin = [
-    {file = "genshin-1.2.1-py3-none-any.whl", hash = "sha256:1985d0715cae5282d25470651eedb4b8dcc0e7093c9c8d53daffe22085137ac1"},
-    {file = "genshin-1.2.1.tar.gz", hash = "sha256:7f837ff8bc258ab44501007560c15e7ecbb5509abd80760c71ea5c1aca670a20"},
+    {file = "genshin-1.2.3-py3-none-any.whl", hash = "sha256:636068068e9934038aec87229a45c82c45e9f879ab931cdcfc30b79a4d829f8f"},
+    {file = "genshin-1.2.3.tar.gz", hash = "sha256:41965f52a7820678fe64eec1c406a9ea0e27862ff74ce421946e7c0542e18c65"},
 ]
 greenlet = [
     {file = "greenlet-1.1.2-cp27-cp27m-macosx_10_14_x86_64.whl", hash = "sha256:58df5c2a0e293bf665a51f8a100d3e9956febfbf1d9aaf8c0677cf70218910c6"},
