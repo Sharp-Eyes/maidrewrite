@@ -9,14 +9,18 @@ WIKI_BASE = "https://honkaiimpact3.fandom.com/"
 
 
 class RequestCategoryEmoji(str, enum.Enum):
-    STIGMATA = "<:Stigmata_Generic:914200965136138241>"
     BATTLESUITS = "<:Valkyrie_Generic:909813519103430697>"
+    ELFS = "<:ELF_Generic:1021130366083403796>"
+    STIGMATA = "<:Stigmata_Generic:914200965136138241>"
+    EVENT_STIGMATA = STIGMATA
     WEAPONS = "<:Equipment_Generic:642086143571132420>"
 
 
 class RequestCategory(str, enum.Enum):
-    STIGMATA = "Category:Stigmata"
     BATTLESUITS = "Category:Battlesuits"
+    ELFS = "Category:ELFs"
+    STIGMATA = "Category:Stigmata"
+    EVENT_STIGMATA = "Category:Event Stigmata"
     WEAPONS = "Category:Weapons"
 
     @property
@@ -123,44 +127,6 @@ class BattlesuitType(str, enum.Enum):
         return BattlesuitTypeEmoji[self.name]
 
 
-class BattlesuitCoreStrengthEmoji(str, enum.Enum):
-    """Battlesuit core strength identifier emoji.
-
-    Unlike normal enums, these are validated by member name instead of value.
-    """
-
-    ICE_DMG = "<:Ice_DMG:911355738008453151>"
-    FIRE_DMG = "<:Fire_DMG:911355738042007572>"
-    LIGHTNING_DMG = "<:Lightning_DMG:911355737832304650>"
-    PHYSICAL = "<:Physical:911355737819725875>"
-
-    BURST = "<:Burst:911356972044009532>"
-    TIME_MASTERY = "<:Time_Mastery:911355737878462544>"
-    GATHER = "<:Gather:911355737819725844>"
-    HEAL = "<:Heal:911355737907822592>"
-    FAST_ATK = "<:Fast_ATK:911355737756807281>"
-    HEAVY_ATK = "<:Heavy_ATK:911355737861681183>"
-
-    FREEZE = "<:Freeze:911355838394929236>"
-    IGNITE = "<:Ignite:911355738083954739>"
-    BLEED = "<:Bleed:911355737886847026>"
-    WEAKEN = "<:Weaken:911355738100748338>"
-    IMPAIR = "<:Impair:911355737903603792>"
-    STUN = "<:Stun:911355838491402250>"
-    PARALYZE = "<:Paralyze:911355737958125639>"
-    AERIAL = "<:Aerial:938545043038416936>"
-
-    @classmethod
-    def __get_validators__(cls: t.Type[T]) -> t.Generator[t.Callable[[str], T], None, None]:
-        def validate(value: str) -> T:
-            try:
-                return cls[value.upper().replace(" ", "_")]
-            except KeyError:
-                return t.cast(T, cls(value))
-
-        yield validate
-
-
 class BattlesuitRecommendation(str, enum.Enum):
     RECOMMENDED = "BBSrec"
     AUXILIARY = "BBSau"
@@ -177,6 +143,7 @@ class BattlesuitRecommendationType(str, enum.Enum):
 # Stigmata
 
 STAR = "<:icon_rarity_star:641631459865526302>"
+EMPTY_STAR = "<:icon_rarity_star_empty:642086113539784782>"
 
 
 class StigmaRarityCategory(str, enum.Enum):
@@ -254,12 +221,12 @@ class WeaponSkillTypeEmoji(str, enum.Enum):
 class WeaponRarityCategory(str, enum.Enum):
     """Weapon rarity categories as they appear on the wiki."""
 
-    R1 = "Category:1-Star Weapons"
-    R2 = "Category:2-Star Weapons"
-    R3 = "Category:3-Star Weapons"
-    R4 = "Category:4-Star Weapons"
-    R5 = "Category:5-Star Weapons"
-    R6 = "Category:6-Star Weapons"
+    R1 = "Category:1-star Weapons"
+    R2 = "Category:2-star Weapons"
+    R3 = "Category:3-star Weapons"
+    R4 = "Category:4-star Weapons"
+    R5 = "Category:5-star Weapons"
+    R6 = "Category:6-star Weapons"
 
 
 class WeaponRarity(int, enum.Enum):
@@ -315,3 +282,44 @@ class WeaponType(str, enum.Enum):
     def category(self) -> WeaponCategory:
         """The wiki category belonging to this weapon type."""
         return WeaponCategory[self.name]
+
+
+# Any
+
+
+class CoreStrengthEmoji(str, enum.Enum):
+    """core strength identifier emoji.
+
+    Unlike normal enums, these can also be validated by member name.
+    """
+
+    ICE_DMG = "<:Ice_DMG:911355738008453151>"
+    FIRE_DMG = "<:Fire_DMG:911355738042007572>"
+    LIGHTNING_DMG = "<:Lightning_DMG:911355737832304650>"
+    PHYSICAL = "<:Physical:911355737819725875>"
+
+    BURST = "<:Burst:911356972044009532>"
+    TIME_MASTERY = "<:Time_Mastery:911355737878462544>"
+    GATHER = "<:Gather:911355737819725844>"
+    HEAL = "<:Heal:911355737907822592>"
+    FAST_ATK = "<:Fast_ATK:911355737756807281>"
+    HEAVY_ATK = "<:Heavy_ATK:911355737861681183>"
+
+    FREEZE = "<:Freeze:911355838394929236>"
+    IGNITE = "<:Ignite:911355738083954739>"
+    BLEED = "<:Bleed:911355737886847026>"
+    WEAKEN = "<:Weaken:911355738100748338>"
+    IMPAIR = "<:Impair:911355737903603792>"
+    STUN = "<:Stun:911355838491402250>"
+    PARALYZE = "<:Paralyze:911355737958125639>"
+    AERIAL = "<:Aerial:938545043038416936>"
+
+    @classmethod
+    def __get_validators__(cls: t.Type[T]) -> t.Generator[t.Callable[[str], T], None, None]:
+        def validate(value: str) -> T:
+            try:
+                return cls[value.upper().replace(" ", "_")]
+            except KeyError:
+                return t.cast(T, cls(value))
+
+        yield validate

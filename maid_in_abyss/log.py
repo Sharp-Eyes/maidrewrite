@@ -9,7 +9,7 @@ import coloredlogs
 
 def setup() -> None:
     """Set up loggers."""
-    format_string = "%(asctime)s | %(name)-23s | %(levelname)-8s | %(message)s"
+    format_string = "%(asctime)s | %(name)-31s | %(levelname)-8s | %(message)s"
     log_format = logging.Formatter(format_string)
     root_logger = logging.getLogger()
 

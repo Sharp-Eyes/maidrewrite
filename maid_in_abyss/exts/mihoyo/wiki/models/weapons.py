@@ -3,40 +3,55 @@ import typing as t
 
 import pydantic
 
-from .. import api_types, constants
+from .. import constants
+from . import base
 
-__all__ = ("Weapon", "WeaponSkill")
+__all__ = ("Weapon", "WeaponSkill", "WeaponStats")
 
 
 ACTIVE_SKILL_PATTERN = re.compile(r"\[SP: \d+\]\[CD: \d+s\]")
 
 
-# class WeaponStat(api_types.ContentBase):
-#     base: int
-#     max: int
+class WeaponStats(base.ContentBase):
+    attack: int
+    crit: int
+    rarity: constants.WeaponRarity
 
-#     def display(self) -> str:
-#         return f"{self.base} ~ {self.max}"
+    @property
+    def data(self) -> t.Dict[str, str]:
+        return {
+            "rarity": f"{self.rarity}*",
+            "attack": str(self.attack),
+            "crit": str(self.crit),
+        }
 
 
-class WeaponSkill(api_types.ContentBase):
+class WeaponSkill(base.ContentBase):
     name: str
     effect: str
+    core_strengths: t.Sequence[constants.CoreStrengthEmoji]
+
+    @pydantic.validator("core_strengths", pre=True)
+    def _parse_core_strengths(cls, value: t.Union[str, t.List[str]]):
+        if isinstance(value, list):
+            return value
+        return value.split(", ") if value else []
 
     def is_active(self) -> bool:
         return bool(ACTIVE_SKILL_PATTERN.search(self.effect))
 
 
-class Weapon(api_types.ContentBase):
+class Weapon(base.ContentBase):
+
     name: str
     type: str  # can't use constants.WeaponType here because they're oddly inconsistent...
     rarity: constants.WeaponRarity
     # obtain: t.Optional[str] = None
-    attack: int = pydantic.Field(alias="ATK")
-    crit: int = pydantic.Field(alias="CRT")
+    stats: t.Sequence[WeaponStats]
 
     description: str
     skills: t.Sequence[WeaponSkill]
+    pri_arm: t.Optional[str] = pydantic.Field(None, alias="priArm")
     pri_arm_base: t.Optional[str] = pydantic.Field(None, alias="priArmBase")
     divine_key: bool = False
 
@@ -47,11 +62,27 @@ class Weapon(api_types.ContentBase):
             values[base] = {k.removeprefix(base): v for k, v in values.items() if base in k}
         return values
 
-    # @pydantic.root_validator(pre=True)
-    # def _pack_stats(cls, values: t.Dict[str, t.Any]):
-    #     for base in ("ATK", "CRT"):
-    #         values[base] = {tier: values[f"{base}_{tier}Rarity"] for tier in ("base", "max")}
-    #     return values
+    @pydantic.root_validator(pre=True)
+    def _pack_stats(cls, values: t.Dict[str, t.Any]):
+        if "stats" in values:
+            return values
+
+        rarities = ("base", "2nd", "3rd", "4th", "5th", "max")
+        base_rarity = values["rarity"]
+
+        stats = values["stats"] = []
+        for rarity in rarities:
+            if not (atk := values.get(f"ATK_{rarity}Rarity")):
+                continue
+
+            stats.append(
+                WeaponStats(
+                    attack=atk,
+                    crit=values[f"CRT_{rarity}Rarity"],
+                    rarity=constants.WeaponRarity(int(base_rarity) + len(stats)),
+                )
+            )
+        return values
 
     @pydantic.root_validator(pre=True)
     def _pack_skills(cls, values: t.Dict[str, t.Any]):
@@ -60,13 +91,14 @@ class Weapon(api_types.ContentBase):
 
         values["skills"] = skills = []
         for i in range(1, 5):
-            if not (name := values.get(f"skill{i}")):
+            if not (name := values.get(f"s{i}_name")):
                 break
 
             skills.append(
                 WeaponSkill(
                     name=name,
-                    effect=values[f"effect{i}"],
+                    effect=values[f"s{i}_effect"],
+                    core_strengths=values.get(f"s{i}_core_strengths", []),
                 )
             )
         return values
@@ -74,6 +106,10 @@ class Weapon(api_types.ContentBase):
     @pydantic.validator("rarity", pre=True)
     def _cast_rarity(cls, rarity: str):
         return int(rarity)
+
+    @property
+    def max_rarity(self) -> constants.WeaponRarity:
+        return self.stats[-1].rarity
 
     @property
     def active_skill(self) -> t.Optional[WeaponSkill]:

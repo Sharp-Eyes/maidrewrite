@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
-import functools
 import inspect
 import logging
 import typing as t
@@ -215,44 +214,17 @@ class Plugin:
 
         return decorator
 
-    def listener(self, event: t.Optional[str] = None, *, with_error_handler: bool = True):
-        def decorator(callback: CoroFuncT) -> CoroFuncT:
+    def add_listeners(self, *callbacks: CoroFunc, event: t.Optional[str] = None) -> None:
+        for callback in callbacks:
             key = callback.__name__ if event is None else event
-            if with_error_handler:
-                callback = self._wrap_error_handler(callback, key + "_error")
-
             self.listeners.setdefault(key, []).append(callback)
+
+    def listener(self, event: t.Optional[str] = None):
+        def decorator(callback: CoroFuncT) -> CoroFuncT:
+            self.add_listeners(callback, event=event)
             return callback
 
         return decorator
-
-    def _wrap_error_handler(
-        self,
-        callback: CoroFuncT,
-        handler_name: str,
-    ) -> CoroFuncT:
-        @functools.wraps(callback)
-        async def wrapped(*args: t.Any, **kwargs: t.Any):
-            try:
-                return await callback(*args, **kwargs)
-
-            except Exception as exc:
-                propagate = True
-                for handler in self.listeners.get(handler_name, []):
-                    if await handler(exc, *args, **kwargs):
-                        propagate = False
-
-                if propagate:
-                    raise
-
-        return t.cast(CoroFuncT, wrapped)
-
-    def listener_error_handler(self, event: str) -> t.Callable[[CoroFuncT], CoroFuncT]:
-        def wrapper(callback: CoroFuncT) -> CoroFuncT:
-            self.listener(event + "_error")(callback)
-            return callback
-
-        return wrapper
 
     async def load(self, bot: commands.Bot) -> None:
         await asyncio.gather(hook() for hook in self._pre_load_hooks)

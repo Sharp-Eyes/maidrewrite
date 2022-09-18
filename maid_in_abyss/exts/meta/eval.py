@@ -13,8 +13,7 @@ import databases
 import disnake
 from disnake.ext import commands
 
-import bot
-import utilities
+from maid_in_abyss import bot, utilities
 
 LOGGER = logging.getLogger(__name__)
 

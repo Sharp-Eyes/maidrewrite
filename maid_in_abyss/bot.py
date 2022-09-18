@@ -7,8 +7,6 @@ import databases
 import redis.asyncio
 from disnake.ext import commands
 
-from utilities import plugin
-
 
 class Maid_in_Abyss(commands.Bot):
     def __init__(
@@ -24,6 +22,3 @@ class Maid_in_Abyss(commands.Bot):
         self.redis = redis
         self.database = database
         self.default_session = session
-
-    async def load_plugin(self, plugin: plugin.Plugin) -> None:
-        await plugin.load(self)

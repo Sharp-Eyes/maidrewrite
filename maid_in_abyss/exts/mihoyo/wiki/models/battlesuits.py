@@ -3,19 +3,20 @@ import typing as t
 import pydantic
 import wikitextparser
 
-from .. import api_types, constants
+from .. import constants
+from . import base
 
 __all__ = ("Battlesuit", "BattlesuitEquipment", "BattlesuitRecommendation")
 
 
-class BattlesuitEquipment(api_types.ContentBase):
+class BattlesuitEquipment(base.ContentBase):
     """Represents a piece of equipment, equipped on a Battlesuit."""
 
     name: str
     rarity: int
 
 
-class BattlesuitRecommendation(api_types.ContentBase):
+class BattlesuitRecommendation(base.ContentBase):
     """Represents an equipment recommendation for a battlesuit, including a
     weapon, and T, M, and B stigmata; not necessarily of the same set.
     """
@@ -30,7 +31,7 @@ class BattlesuitRecommendation(api_types.ContentBase):
     compatibility: str
 
 
-class Battlesuit(api_types.ContentBase):  # TODO: skills
+class Battlesuit(base.ContentBase):  # TODO: skills
     """Represents a battlesuit with all data on the wiki."""
 
     type: constants.BattlesuitType
@@ -38,9 +39,10 @@ class Battlesuit(api_types.ContentBase):  # TODO: skills
     name: str = pydantic.Field(alias="battlesuit")
     character: str
     profile: str = ""  # Undefined for augments for whatever reason.
-    core_strengths: t.Sequence[constants.BattlesuitCoreStrengthEmoji]
-    augment: t.Optional[str]
+    core_strengths: t.Sequence[constants.CoreStrengthEmoji]
     recommendations: t.Sequence[BattlesuitRecommendation]
+    augment: t.Optional[str]
+    awakening: t.Optional[str] = pydantic.Field(None, alias="shared")
 
     @pydantic.validator("core_strengths", pre=True)
     def _parse_core_strengths(cls, value: t.Union[str, t.List[str]]):

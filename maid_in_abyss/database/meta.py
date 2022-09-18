@@ -2,7 +2,7 @@ import databases
 import ormar
 import sqlalchemy
 
-import constants
+from .. import constants
 
 database = databases.Database(constants.DBConfig.URL)
 metadata = sqlalchemy.MetaData()

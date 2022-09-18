@@ -10,10 +10,7 @@ import sqlalchemy
 import uvloop
 from disnake.ext import commands
 
-import bot
-import constants
-import database.meta
-import log
+from . import bot, constants, database, log
 
 log.setup()
 LOGGER = logging.getLogger(__name__)
@@ -60,10 +57,10 @@ async def main():
     await maid_in_abyss.database.connect()
 
     maid_in_abyss.add_command(reload_)
-    maid_in_abyss.load_extension("exts.mihoyo.wiki.plugin")
-    maid_in_abyss.load_extension("exts.meta.eval")
-    maid_in_abyss.load_extension("exts.meta.logging")
-    maid_in_abyss.load_extension("exts.meta.delete")
+    maid_in_abyss.load_extension(".exts.mihoyo.wiki.plugin", package="maid_in_abyss")
+    maid_in_abyss.load_extension(".exts.meta.eval", package="maid_in_abyss")
+    maid_in_abyss.load_extension(".exts.meta.logging", package="maid_in_abyss")
+    maid_in_abyss.load_extension(".exts.meta.delete", package="maid_in_abyss")
 
     await maid_in_abyss.start(constants.BotConfig.TOKEN)
 

@@ -4,6 +4,17 @@ import typing as t
 import pydantic
 import wikitextparser
 
+__all__ = (
+    "WikiLinkDict",
+    "AnyResponse",
+    "PageInfoValidator",
+    "PageContentValidator",
+)
+
+
+WikiLinkDict = t.Dict[str, t.Tuple[str, str]]
+
+
 # API response types
 
 _ContinueAPIResponseComponent = t.TypedDict(
@@ -84,6 +95,14 @@ class WikiText(wikitextparser.WikiText):
 
         yield _validate
 
+    def to_dict(self) -> t.Dict[str, t.Any]:
+        return {
+            argument.name.strip(): argument.value.strip()
+            for template in self.templates
+            for argument in template.arguments
+            if not template.ancestors()  # Avoid nested arguments
+        }
+
 
 class RevisionValidator(pydantic.BaseModel, extra=pydantic.Extra.forbid):
     contentmodel: t.Literal["wikitext"]
@@ -96,19 +115,12 @@ class PageContentValidator(pydantic.BaseModel, extra=pydantic.Extra.forbid):
     ns: int
     title: str
     revision: RevisionValidator = pydantic.Field(alias="revisions")  # We only care about main.
+    category: TitleContainerValidator = pydantic.Field(alias="categories")  # Can't have two.
+
+    @pydantic.validator("category", pre=True)
+    def _unnest_categories(cls, categories: t.List[t.Any]) -> t.Dict[str, str]:
+        return categories[0]
 
     @pydantic.validator("revision", pre=True)
-    def _unnest_revisions(
-        cls,
-        revisions: t.List[t.Any],
-    ) -> t.Dict[str, t.Dict[str, str]]:
+    def _unnest_revisions(cls, revisions: t.List[t.Any]) -> t.Dict[str, t.Dict[str, str]]:
         return revisions[0]["slots"]["main"]
-
-
-# Content models
-
-
-class ContentBase(pydantic.BaseModel):
-    class Config:
-        allow_mutation = False
-        frozen = True

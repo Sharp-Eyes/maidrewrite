@@ -52,7 +52,8 @@ class NotPermitted(ValueError, MaidException):
 
     def __embed_repr__(self) -> t.List[disnake.Embed]:
         embed = disnake.Embed(
-            title="You are not permitted to take this action...", description=self.reason
+            title="You are not permitted to take this action...",
+            description=self.reason,
         )
         if self.perms:
             embed.add_field(

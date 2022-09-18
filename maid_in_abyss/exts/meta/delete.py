@@ -3,7 +3,7 @@ import typing as t
 import disnake
 from disnake.ext import components
 
-import utilities
+from maid_in_abyss import utilities
 
 plugin = utilities.Plugin.with_metadata(
     name="delete_button_handler",

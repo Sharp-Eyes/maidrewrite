@@ -2,7 +2,7 @@ import typing as t
 
 import ormar
 
-from database import field, meta
+from .. import field, meta
 
 
 class PageInfo(ormar.Model):

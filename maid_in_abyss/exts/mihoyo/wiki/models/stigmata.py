@@ -2,12 +2,13 @@ import typing as t
 
 import pydantic
 
-from .. import api_types, constants
+from .. import constants
+from . import base
 
 __all__ = ("SetBonus", "Stigma", "StigmataSet")
 
 
-class SetBonus(api_types.ContentBase):
+class SetBonus(base.ContentBase):
     """Represents a set bonus for a stigmata set."""
 
     name: str
@@ -15,7 +16,7 @@ class SetBonus(api_types.ContentBase):
     number: int
 
 
-class Stigma(api_types.ContentBase):
+class Stigma(base.ContentBase):
     """Represents a singular Stigma. Also contains information about its set."""
 
     name: str = pydantic.Field(alias="slot_name")
@@ -81,7 +82,7 @@ class Stigma(api_types.ContentBase):
         return tuple(bonus for bonus in (self.set_2p, self.set_3p) if bonus)
 
 
-class StigmataSet(api_types.ContentBase):
+class StigmataSet(base.ContentBase):
     """Represents a set of `Stigma`ta. This has full support for mixed sets.
 
     Any set operations take into account the number of stigmata of a given set

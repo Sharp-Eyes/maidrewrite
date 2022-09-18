@@ -4,8 +4,7 @@ import typing as t
 import disnake
 from disnake.ext import commands
 
-import bot
-import utilities
+from maid_in_abyss import bot, utilities
 
 LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ async def on_command(ctx: commands.Context[bot.Maid_in_Abyss]) -> None:
     lines = ctx.message.content.split("\n")
 
     LOGGER.info(
-        "command {command!s} {author!s} ({author.id}) in {channel!s} ({channel.id}): {content}".format(
+        "command {command!s} by {author!s} ({author.id}) in {channel!s} ({channel.id}): {content}".format(
             author=ctx.author,
             channel=ctx.channel,
             command=command,
@@ -54,7 +53,7 @@ async def on_slash_command(inter: disnake.ApplicationCommandInteraction) -> None
         return
 
     LOGGER.info(
-        "Slash command `{command!s}` by {author!s} ({author.id}) in {channel!s} ({channel.id}): {content}".format(  # noqa: E501
+        "Slash command `{command!s}` by {author!s} ({author.id}) in {channel!s} ({channel.id}): {content}".format(  # noqa: #501
             author=inter.author,
             channel=inter.channel,
             command=inter.application_command.qualified_name,
