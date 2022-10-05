@@ -25,7 +25,7 @@ disnake-ext-components = {git = "https://github.com/DisnakeCommunity/disnake-ext
 ormar = "^0.11.2"
 psycopg2-binary = "^2.9.3"
 redis = "^4.3.4"
-ormar-postgres-extensions = "^2.1.0"
+ormar-postgres-extensions = "^2.3.0"
 coloredlogs = "^15.0.1"
 genshin = "^1.2.1"
 wikitextparser = "^0.49.2"
