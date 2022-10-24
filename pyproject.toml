@@ -22,7 +22,7 @@ authors = ["Chromosomologist <you@example.com>"]  # email pending :mmlol:
 python = "^3.10"
 disnake = {git = "https://github.com/DisnakeDev/disnake", rev = "master"}
 disnake-ext-components = {git = "https://github.com/DisnakeCommunity/disnake-ext-components"}
-ormar = "^0.11.2"
+ormar = "^0.12.0"
 psycopg2-binary = "^2.9.3"
 redis = "^4.3.4"
 ormar-postgres-extensions = "^2.1.0"
